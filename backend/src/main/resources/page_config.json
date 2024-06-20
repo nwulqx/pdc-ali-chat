@@ -1,0 +1,53 @@
+{
+  "theme": "dark",
+  "language": "zh",
+  "chatTabs": [
+    {
+      "title": "文本问答",
+      "type": "text_chat",
+      "code": "text_chat"
+    },
+    {
+      "title": "文档解析",
+      "type": "doc_chat",
+      "code": "doc_chat"
+    },
+    {
+      "title": "表格问答",
+      "type": "text_chat",
+      "code": "table_chat"
+    }
+  ],
+  "headerLogo": "https://img.alicdn.com/imgextra/i1/O1CN01hcboiy1da0YUdaC1X_!!6000000003751-2-tps-100-86.png",
+  "contentLogo": "https://img.alicdn.com/imgextra/i1/O1CN01hcboiy1da0YUdaC1X_!!6000000003751-2-tps-100-86.png",
+  "guideText": "你好，我是JR",
+  "answerLogo": "https://img.alicdn.com/imgextra/i1/O1CN01hcboiy1da0YUdaC1X_!!6000000003751-2-tps-100-86.png",
+  "answerAnimateLogo": "https://img.alicdn.com/imgextra/i4/O1CN01YfEPwr1yl63VHcOc9_!!6000000006618-1-tps-420-420.gif",
+  "textRecommends": [
+    {
+      "showData": "根据主题，帮我列一下ppt的大纲，逻辑要分明，框架要清晰。我的ppt主题是：2023年手机销售总结",
+      "contentData": "根据主题p，帮我列一下ppt的大纲，逻辑要分明，框架要清晰。我的ppt主题是：2023年手机销售总结",
+      "iconUrl": "https://img.alicdn.com/imgextra/i1/O1CN01zerAif1J0vte2TBnX_!!6000000000967-2-tps-120-120.png",
+      "title": "ppt大纲助手"
+    },
+    {
+      "showData": "将工作概要整理成周报，依次罗列带有数据的进展、明确下阶段todo。输入：熟悉新环境，上线新功能",
+      "contentData": "将工作概要整理成周报，依次罗列带有数据的进展、明确下阶段todo。输入：熟悉新环境，上线新功能",
+      "iconUrl": "https://img.alicdn.com/imgextra/i4/O1CN01QYd6CZ1aEX7tmejf2_!!6000000003298-2-tps-120-120.png",
+      "title": "周报小助理"
+    },
+    {
+      "showData": "请帮我拆解问题、下探真实意图并提供方案，我的问题是：我的科研工作遇到了难题",
+      "contentData": "请帮我拆解问题、下探真实意图并提供方案，我的问题是：我的科研工作遇到了难题",
+      "iconUrl": "https://img.alicdn.com/imgextra/i4/O1CN01qEZ0ns1M1nUYR0lu3_!!6000000001375-2-tps-36-36.png",
+      "title": "怎么办助手"
+    },
+    {
+      "showData": "帮我输出知识点的基本原理，以及不同类型的3个题目，并给出对应的答案。我的输入是：勾股定理",
+      "contentData": "帮我输出知识点的基本原理，以及不同类型的3个题目，并给出对应的答案。我的输入是：勾股定理",
+      "iconUrl": "https://img.alicdn.com/imgextra/i2/O1CN01NCSJIl1zd8ncrhrsZ_!!6000000006736-2-tps-36-36.png",
+      "title": "知识巩固小助手"
+    }
+  ],
+  "metaIcon": "https://img.alicdn.com/imgextra/i1/O1CN01hcboiy1da0YUdaC1X_!!6000000003751-2-tps-100-86.png"
+}

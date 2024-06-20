@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: chat-sample
+  freemarker:
+    cache: false
+    charset: UTF-8
+    suffix: .ftl
+    enabled: true
+    content-type: text/html
+    template-loader-path: classpath:/templates/,classpath:/static/
+
+server:
+  port: 8080
+
+chat:
+  llm:
+    #[需修改]阿里云accessKeyId, 参考文档https://help.aliyun.com/document_detail/2587494.html?spm=a2c4g.2587492.0.0.2fe9630b3xtcS8
+    accessKeyId:
+    #[需修改]阿里云accessKeySecret
+    accessKeySecret:
+    #[需修改]百炼AgentKey
+    agentKey:
+    #[需修改]百炼应用id, 配置多个对话应用时，需要跟page_config.json中的chatTabs里的code一一对应, 也就是一个tab的code对应一个百炼appId
+    appIds:
+      text_chat:
+      doc_chat:
+      table_chat:
+    # POP网关地址
+    popEndpoint:
+    # 百炼网关地址
+    endpoint:
+    timeout: 60 #llm请求超时时间60秒
+  doc:
+    #[需修改]向量数据库id
+    storeId:
+    #[需修改]文件数据库id
+    fileStoreId:
+    timeout: 60 #文档导入超时时间
+  security:
+    refererWhitelist:
+      - http://127.0.0.1:8080
+  app:
+    openTrace: true
+    sessionMaxMessages: 50 #对话记录, 最多50条
+    sessionTtl: 2          #对话缓存时间, 2小时
+
+  cache:
+    type: caffeine            #缓存配置, redis|caffeine, 默认为caffeine
+
+#redis:
+#  host: 127.0.0.1
+#  port: 6379
+#  password:
+
+logging:
+  level:
+    root: info
