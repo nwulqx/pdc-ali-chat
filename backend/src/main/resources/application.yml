@@ -53,7 +53,7 @@ chat:
 #  host: 127.0.0.1
 #  port: 6379
 #  password:
-
-logging:
-  level:
-    root: info
+aliyun:
+  appKey: 242HzDFWvNCJJxAl
+  token: 0e7dc222d7d440aaa7bb10f5f0c01d30
+  url: wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1
