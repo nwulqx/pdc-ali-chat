@@ -1,8 +1,8 @@
-import { defineConfig } from '@ice/app';
-import store from '@ice/plugin-store';
+import { defineConfig } from "@ice/app";
+import store from "@ice/plugin-store";
 
 // The project config, see https://v3.ice.work/docs/guide/basic/config
-const minify = process.env.NODE_ENV === 'production' ? 'swc' : false;
+const minify = process.env.NODE_ENV === "production" ? "swc" : false;
 export default defineConfig(() => ({
   minify,
   plugins: [store()],
@@ -19,13 +19,18 @@ export default defineConfig(() => ({
   ssg: false,
   server: {
     onDemand: true,
-    format: 'esm',
+    format: "esm",
+  },
+  proxy: {
+    "/v1/recognizeSpeech": {
+      target: "http://localhost:8080",
+    },
   },
   codeSplitting: false,
   postcss: {
     plugins: [
       [
-        'postcss-px-to-viewport-8-plugin',
+        "postcss-px-to-viewport-8-plugin",
         {
           mediaQuery: true,
           viewportWidth: 750,

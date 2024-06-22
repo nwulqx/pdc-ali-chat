@@ -1,6 +1,6 @@
-import classnames from 'classnames';
-import { Input } from 'antd';
-import IconFont from '@/components/IconFont';
+import classnames from "classnames";
+import { Input } from "antd";
+import IconFont from "@/components/IconFont";
 import React, {
   forwardRef,
   KeyboardEvent,
@@ -8,14 +8,15 @@ import React, {
   useImperativeHandle,
   useRef,
   useState,
-} from 'react';
-import mStyles from '../../mComponents/TextArea.module.less';
-import pcStyles from './index.module.less';
-import { breakLine, onMobile } from '@/libs/utils';
-import { TextAreaRef } from 'antd/es/input/TextArea';
-import store from '@/store';
-import Toast from '@/components/Toast';
-import { FormattedMessage, useIntl } from 'react-intl';
+} from "react";
+import mStyles from "../../mComponents/TextArea.module.less";
+import pcStyles from "./index.module.less";
+import { breakLine, onMobile } from "@/libs/utils";
+import { TextAreaRef } from "antd/es/input/TextArea";
+import store from "@/store";
+import Toast from "@/components/Toast";
+import { FormattedMessage, useIntl } from "react-intl";
+import SpeechToText from "../SpeechToText";
 const styles = onMobile ? mStyles : pcStyles;
 
 function moveCaretToEnd(el: HTMLTextAreaElement) {
@@ -31,7 +32,7 @@ export interface ITextAreaRefProps {
 
 const maxLength = 5500;
 const TextInput = (props, ref) => {
-  const [chatState] = store.useModel('app');
+  const [chatState] = store.useModel("app");
 
   const { onSubmit, loading, themeType, setFocus } = props;
   const inputRef = useRef(null as TextAreaRef | null);
@@ -39,7 +40,7 @@ const TextInput = (props, ref) => {
   const [show, setShow] = useState(true);
   // 输入内容
   const [textValue, setTextValue] = useState(
-    props.value || chatState?.inputText,
+    props.value || chatState?.inputText
   );
   const cacheLoading = useRef(loading);
   const cacheIndex = useRef(-1);
@@ -56,19 +57,19 @@ const TextInput = (props, ref) => {
         }, 30);
       },
       clear: () => {
-        setTextValue('');
+        setTextValue("");
       },
     }),
-    [setTextValue],
+    [setTextValue]
   );
 
   useEffect(() => {
-    if (chatState.sessionType === 'text_chat') {
+    if (chatState.sessionType === "text_chat") {
       setTimeout(() => {
         setShow(true);
       }, 200);
     }
-    if (!fadeOut && chatState.sessionType !== 'text_chat') {
+    if (!fadeOut && chatState.sessionType !== "text_chat") {
       setFadeOut(true);
       setTimeout(() => {
         setShow(false);
@@ -96,7 +97,7 @@ const TextInput = (props, ref) => {
 
     if (cacheLoading.current) {
       Toast.show({
-        type: 'warning',
+        type: "warning",
         message: intl.formatMessage({ id: "loadingTip" }),
       });
       return;
@@ -104,7 +105,7 @@ const TextInput = (props, ref) => {
     onSubmit(textValue);
     cacheIndex.current = -1;
     if (props.onChange) return;
-    setTextValue('');
+    setTextValue("");
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -135,7 +136,7 @@ const TextInput = (props, ref) => {
     <div
       className={classnames(props.className, styles.chatTextareaText, {
         [styles.chatTextarea]: true,
-        [styles.dark]: themeType === 'dark',
+        [styles.dark]: themeType === "dark",
       })}
     >
       <Input.TextArea
@@ -145,9 +146,9 @@ const TextInput = (props, ref) => {
           styles.textarea,
           styles.fadeIn,
           props.textareaClassName,
-          { [styles.fadeOut]: fadeOut },
+          { [styles.fadeOut]: fadeOut }
         )}
-        placeholder={intl.formatMessage({ id: 'textPlaceholder' })}
+        placeholder={intl.formatMessage({ id: "textPlaceholder" })}
         autoSize={
           props.autoSize || {
             minRows: 1.5,
@@ -186,12 +187,13 @@ const TextInput = (props, ref) => {
                 props.currentCountClassName,
                 {
                   [styles.limitMax]: maxLength <= textValue.length,
-                },
+                }
               )}
             >
               {textValue.length}
             </div>
             <div className={styles.wordLen}>/{maxLength}</div>
+            <SpeechToText />
           </div>
           {props.tools || (
             <div
@@ -202,12 +204,14 @@ const TextInput = (props, ref) => {
               onMouseUp={(e) => e.stopPropagation()}
             >
               {
-                <IconFont
-                  className={classnames('iconfont', {
-                    [styles.loadingIcon]: loading,
-                  })}
-                  type="icon-fasong_default"
-                />
+                <>
+                  <IconFont
+                    className={classnames("iconfont", {
+                      [styles.loadingIcon]: loading,
+                    })}
+                    type="icon-fasong_default"
+                  />
+                </>
               }
             </div>
           )}

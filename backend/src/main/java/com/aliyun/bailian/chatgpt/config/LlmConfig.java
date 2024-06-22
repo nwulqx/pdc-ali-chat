@@ -45,6 +45,7 @@ public class LlmConfig {
 
     private String endpoint;
 
+    private String nlsKey;
     public String getAccessKeyId() {
         String val = System.getenv("ACCESS_KEY_ID");
         if (StringUtils.isNotBlank(val)) {

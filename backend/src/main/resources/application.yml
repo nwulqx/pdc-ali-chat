@@ -30,6 +30,8 @@ chat:
     # 百炼网关地址
     endpoint:
     timeout: 60 #llm请求超时时间60秒
+    #[需修改]一句话语音识别 key
+    nlsKey:
   doc:
     #[需修改]向量数据库id
     storeId:

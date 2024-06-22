@@ -3,6 +3,11 @@
 # dependencies
 */**/node_modules
 */**/package-lock.json
+/backend/target
+/backend/src/main/resources/static
+/backend/src/main/resources/templates
+/frontend/build
+
 */**/.ice
 /.pnp
 .pnp.js
