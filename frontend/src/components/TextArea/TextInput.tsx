@@ -193,28 +193,30 @@ const TextInput = (props, ref) => {
               {textValue.length}
             </div>
             <div className={styles.wordLen}>/{maxLength}</div>
-            <SpeechToText />
           </div>
-          {props.tools || (
-            <div
-              className={classnames(styles.chatBtn, {
-                [styles.disabled]: !textValue?.trim() || loading,
-              })}
-              onClick={onEnter}
-              onMouseUp={(e) => e.stopPropagation()}
-            >
-              {
-                <>
-                  <IconFont
-                    className={classnames("iconfont", {
-                      [styles.loadingIcon]: loading,
-                    })}
-                    type="icon-fasong_default"
-                  />
-                </>
-              }
-            </div>
-          )}
+          {props.tools ||
+            (textValue?.trim() ? (
+              <div
+                className={classnames(styles.chatBtn, {
+                  [styles.disabled]: !textValue?.trim() || loading,
+                })}
+                onClick={onEnter}
+                onMouseUp={(e) => e.stopPropagation()}
+              >
+                {
+                  <>
+                    <IconFont
+                      className={classnames("iconfont", {
+                        [styles.loadingIcon]: loading,
+                      })}
+                      type="icon-fasong_default"
+                    />
+                  </>
+                }
+              </div>
+            ) : (
+              <SpeechToText onChange={setTextValue} />
+            ))}
         </div>
       </div>
     </div>

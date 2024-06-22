@@ -44,16 +44,15 @@ chat:
   app:
     openTrace: true
     sessionMaxMessages: 50 #对话记录, 最多50条
-    sessionTtl: 2          #对话缓存时间, 2小时
+    sessionTtl: 2 #对话缓存时间, 2小时
 
   cache:
-    type: caffeine            #缓存配置, redis|caffeine, 默认为caffeine
+    type: caffeine #缓存配置, redis|caffeine, 默认为caffeine
 
 #redis:
 #  host: 127.0.0.1
 #  port: 6379
 #  password:
-
-logging:
-  level:
-    root: info
+aliyun:
+  appKey: 242HzDFWvNCJJxAl
+  url: wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1

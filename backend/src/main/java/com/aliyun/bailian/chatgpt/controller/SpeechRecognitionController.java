@@ -1,51 +1,34 @@
 package com.aliyun.bailian.chatgpt.controller;
 
-import com.alibaba.fastjson.JSONObject;
-import com.aliyun.bailian.chatgpt.dto.Result;
-import com.aliyun.bailian.chatgpt.enums.ErrorCodeEnum;
 import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
-import com.aliyun.bailian.chatgpt.utils.LogUtils;
-import com.aliyun.bailian.chatgpt.utils.UUIDGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/v1/recognizeSpeech")
 public class SpeechRecognitionController {
 
     @Autowired
     private SpeechRecognitionService speechRecognitionService;
 
-    @PostMapping(value = "/recognizeSpeech")
-    public String recognizeSpeech(@RequestPart("file") MultipartFile file,
-                                                HttpServletResponse response) {
-        long startTime = System.currentTimeMillis();
-        String requestId = UUIDGenerator.generate(); // 需要从前端传递或者生成一个唯一的请求ID
-        LogUtils.trace(requestId, "recognizeSpeech", "START", startTime, null, null);
-
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> recognize(@RequestPart("file") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            response.setContentType("text/event-stream");
-            response.setCharacterEncoding("UTF-8");
-            response.setHeader("X-Accel-Buffering", "no");
-
-            InputStream inputStream = file.getInputStream();
-            String result = speechRecognitionService.recognize(inputStream);
-            System.out.println("result"+result);
-            return result;
+            String result = speechRecognitionService.recognizeSpeech(file);
+            response.put("code", "0");
+            response.put("data", result);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            LogUtils.monitor(requestId, "SpeechRecognitionController", "recognizeSpeech", "error",
-                    startTime, null, e);
-            return ErrorCodeEnum.CREATE_COMPLETION_ERROR.getErrorCode();
+            response.put("code", "1");
+            response.put("data", "Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

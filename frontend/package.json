@@ -4,6 +4,9 @@
   "description": "百炼saas模板",
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@ice/runtime": "^1.2.7",
     "@uni/request": "^1.1.9",
     "antd": "^4.24.8",
@@ -28,7 +31,8 @@
     "remark-math": "^5.1.1",
     "swiper": "^11.0.2",
     "use-bus": "^2.5.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "wavesurfer.js": "^7.7.15"
   },
   "devDependencies": {
     "@applint/spec": "^1.2.3",
