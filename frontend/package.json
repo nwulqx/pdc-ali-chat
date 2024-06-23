@@ -11,6 +11,7 @@
     "@uni/request": "^1.1.9",
     "antd": "^4.24.8",
     "antd-mobile": "5.32.4",
+    "axios": "^1.7.2",
     "crypto-js": "^4.2.0",
     "event-source-polyfill": "^1.0.31",
     "eventemitter3": "^5.0.0",

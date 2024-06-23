@@ -25,6 +25,9 @@ export default defineConfig(() => ({
     "/v1/recognizeSpeech": {
       target: "http://localhost:8080",
     },
+    "/v1/tts": {
+      target: "http://localhost:8080",
+    },
   },
   codeSplitting: false,
   postcss: {
