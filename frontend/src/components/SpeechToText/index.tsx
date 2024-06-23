@@ -11,12 +11,12 @@ import {
 } from "@ant-design/icons";
 import useDebugMode from "./useDebugMode";
 import Toast from "../Toast";
-
 import styles from "./index.module.less";
 
 interface Props {
   onChange: (val: string) => void;
 }
+
 const AudioRecorder: React.FC<Props> = ({ onChange }) => {
   const [loaded, setLoaded] = useState(false);
   const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
@@ -35,6 +35,11 @@ const AudioRecorder: React.FC<Props> = ({ onChange }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { debugMode } = useDebugMode();
+
+  const silenceThreshold = -50; // dB
+  const silenceDuration = 3000; // milliseconds
+  let silenceTimeout: NodeJS.Timeout;
+
   const loadFFmpeg = async () => {
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     const ffmpeg = ffmpegRef.current;
@@ -147,7 +152,17 @@ const AudioRecorder: React.FC<Props> = ({ onChange }) => {
       const convertedBlob = new Blob([data.buffer], { type: "audio/wav" });
       const convertedUrl = URL.createObjectURL(convertedBlob);
       setConvertedAudioUrl(convertedUrl);
-      uploadToServer(convertedBlob);
+
+      // Analyze the converted audio for silence
+      const hasSound = await analyzeAudio(convertedBlob);
+      if (hasSound) {
+        uploadToServer(convertedBlob);
+      } else {
+        Toast.show({
+          type: "warning",
+          message: "识别失败：没有检测到声音",
+        });
+      }
 
       audioChunksRef.current = [];
     };
@@ -155,9 +170,33 @@ const AudioRecorder: React.FC<Props> = ({ onChange }) => {
     mediaRecorderRef.current.start();
   };
 
+  const analyzeAudio = (blob: Blob): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const reader = new FileReader();
+      reader.onload = () => {
+        audioContext.decodeAudioData(reader.result as ArrayBuffer, (buffer) => {
+          const data = buffer.getChannelData(0);
+          const rms = Math.sqrt(
+            data.reduce((sum, value) => sum + value * value, 0) / data.length
+          );
+          const decibels = 20 * Math.log10(rms);
+
+          if (decibels > silenceThreshold) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        });
+      };
+      reader.readAsArrayBuffer(blob);
+    });
+  };
+
   const stopRecording = () => {
-    record.stopRecording();
     mediaRecorderRef.current?.stop();
+    record.stopRecording();
     setIsRecording(false);
   };
 
