@@ -29,16 +29,19 @@ const AudioPlayer: React.FC<Props> = ({ text }) => {
     fetchAndPlayAudio(text);
   }, [text]);
 
-  useEffect(() => {
+  const audioPlay = () => {
     if (audioUrl && audioRef.current) {
       audioRef.current.load();
       audioRef.current.play();
     }
+  };
+  useEffect(() => {
+    audioPlay();
   }, [audioUrl]);
 
   return (
     <div>
-      <div className={styles.chatBtn} onClick={() => fetchAndPlayAudio(text)}>
+      <div className={styles.chatBtn} onClick={() => audioPlay()}>
         {loading ? <LoadingOutlined /> : <AudioOutlined />}
       </div>
       <div className={styles.audio}>
