@@ -84,7 +84,7 @@ export default (props) => {
                 />
               </div>
             </Tooltip>
-            {isLast && chatState.sessionType === "text_chat" && (
+            {/* {isLast && chatState.sessionType === "text_chat" && (
               <Tooltip
                 title={
                   peerCount >= 5 ? (
@@ -111,7 +111,7 @@ export default (props) => {
                   </span>
                 </div>
               </Tooltip>
-            )}
+            )} */}
           </>
         )}
       </div>
