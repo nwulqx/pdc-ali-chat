@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getAudio } from "./utils";
+import { getAudio, getAudioFromAli } from "./utils";
 import styles from "./index.module.less";
 import { AudioOutlined, LoadingOutlined } from "@ant-design/icons";
+import { useLocation } from "@ice/runtime";
 
 interface Props {
   text: string;
 }
 const AudioPlayer: React.FC<Props> = ({ text }) => {
-  const [audioUrl, setAudioUrl] = useState(null);
+  const query = new URLSearchParams(useLocation().search);
+  const source = query?.get("source"); // tts 服务有两个，pdc 和阿里云，通过 url 区分，默认 pdc
+
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -15,11 +19,18 @@ const AudioPlayer: React.FC<Props> = ({ text }) => {
     if (!curText) return;
     setLoading(true);
     try {
-      const audioBlob = await getAudio(curText);
+      const getAudioService = source === "aliyun" ? getAudioFromAli : getAudio;
+      const audioBlob = await getAudioService(curText);
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
     } catch (error) {
       console.error("Error fetching audio:", error);
+      if (source !== "aliyun") {
+        // 如果 pdc 的tts关闭了，尝试用阿里云的再处理下
+        const audioBlob = await getAudioFromAli(curText);
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+      }
     } finally {
       setLoading(false);
     }
