@@ -12,12 +12,16 @@ import {
 import useDebugMode from "./useDebugMode";
 import Toast from "../Toast";
 import styles from "./index.module.less";
-
+import { INPUT_MODE } from "../TextArea/constants";
+import { Statistic, Tooltip } from "antd";
+const { Countdown } = Statistic;
 interface Props {
   onChange: (val: string) => void;
+  inputMode: INPUT_MODE;
+  onFinish: () => void;
 }
 
-const AudioRecorder: React.FC<Props> = ({ onChange }) => {
+const AudioRecorder: React.FC<Props> = ({ onChange, inputMode, onFinish }) => {
   const [loaded, setLoaded] = useState(false);
   const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
   const [record, setRecord] = useState<any>(null);
@@ -223,6 +227,32 @@ const AudioRecorder: React.FC<Props> = ({ onChange }) => {
     setLoading(false);
   };
 
+  const renderIcon = () => {
+    if (loading) return <LoadingOutlined />;
+    if (isRecording) return <CheckOutlined />;
+    if (inputMode === INPUT_MODE.AUTO_SUBMIT) {
+      return (
+        <Tooltip
+          title="自动提交倒计时"
+          overlayClassName={styles.tooltip}
+          align={{ offset: [0, 4] }}
+          trigger={"hover"}
+          mouseEnterDelay={0.5}
+        >
+          <Countdown
+            className={styles.countdown}
+            format="s"
+            value={Date.now() + 5 * 1000}
+            onFinish={() => {
+              onFinish();
+            }}
+          />
+        </Tooltip>
+      );
+    }
+
+    return <AudioOutlined />;
+  };
   return (
     <div>
       <div
@@ -237,13 +267,7 @@ const AudioRecorder: React.FC<Props> = ({ onChange }) => {
         className={styles.chatBtn}
         onClick={isRecording ? stopRecording : startRecording}
       >
-        {loading ? (
-          <LoadingOutlined />
-        ) : isRecording ? (
-          <CheckOutlined />
-        ) : (
-          <AudioOutlined />
-        )}
+        {renderIcon()}
       </div>
       {/* <select ref={micSelectRef}>
         <option value="" hidden>

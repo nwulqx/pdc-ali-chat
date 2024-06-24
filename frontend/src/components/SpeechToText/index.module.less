@@ -31,3 +31,30 @@
   right: 0;
   min-width: 200px;
 }
+.countdown{
+  :global{
+    .ant-statistic-content{
+      color: #bbb;
+    }
+  }
+}
+.tooltip {
+  :global {
+    .ant-popover-inner {
+      background: var(--primary-color);
+      box-shadow: 0 4px 6px 0 var(--border-shadow-color);
+      border-radius: 4px;
+    }
+
+    .ant-popover-inner-content {
+      color: #fff;
+      padding: 4px 12px;
+      line-height: 24px;
+    }
+
+    .ant-popover-arrow-content {
+      --antd-arrow-background-color: var(--primary-color);
+      box-shadow: 0 4px 6px 0 var(--border-shadow-color);
+    }
+  }
+}

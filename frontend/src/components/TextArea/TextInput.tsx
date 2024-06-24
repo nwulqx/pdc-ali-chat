@@ -15,8 +15,9 @@ import { breakLine, onMobile } from "@/libs/utils";
 import { TextAreaRef } from "antd/es/input/TextArea";
 import store from "@/store";
 import Toast from "@/components/Toast";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 import SpeechToText from "../SpeechToText";
+import { INPUT_MODE } from "./constants";
 const styles = onMobile ? mStyles : pcStyles;
 
 function moveCaretToEnd(el: HTMLTextAreaElement) {
@@ -42,10 +43,17 @@ const TextInput = (props, ref) => {
   const [textValue, setTextValue] = useState(
     props.value || chatState?.inputText
   );
+  // 体验优化：如果是语音识别，且 3 秒内没有修改识别内容，则自动提交
+  const [inputMode, setInputMode] = useState<INPUT_MODE>(INPUT_MODE.AUDIO);
+
   const cacheLoading = useRef(loading);
   const cacheIndex = useRef(-1);
   const intl = useIntl();
 
+  const clear = () => {
+    setTextValue("");
+    setInputMode(INPUT_MODE.AUDIO);
+  };
   useImperativeHandle(
     ref,
     () => ({
@@ -56,9 +64,7 @@ const TextInput = (props, ref) => {
           inputRef.current?.focus();
         }, 30);
       },
-      clear: () => {
-        setTextValue("");
-      },
+      clear,
     }),
     [setTextValue]
   );
@@ -89,9 +95,13 @@ const TextInput = (props, ref) => {
   // 修改输入框内容
   const changeInputValue = (e) => {
     const { value } = e.target;
+    setInputMode(INPUT_MODE.TEXT);
     setTextValue(value);
   };
-
+  const changeInputByAudio = (recognizeText: string) => {
+    setInputMode(INPUT_MODE.AUTO_SUBMIT);
+    setTextValue(recognizeText);
+  };
   const onEnter = () => {
     if (!textValue?.trim()) return;
 
@@ -105,7 +115,7 @@ const TextInput = (props, ref) => {
     onSubmit(textValue);
     cacheIndex.current = -1;
     if (props.onChange) return;
-    setTextValue("");
+    clear();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -195,7 +205,7 @@ const TextInput = (props, ref) => {
             <div className={styles.wordLen}>/{maxLength}</div>
           </div>
           {props.tools ||
-            (textValue?.trim() ? (
+            (textValue?.trim() && inputMode === INPUT_MODE.TEXT ? (
               <div
                 className={classnames(styles.chatBtn, {
                   [styles.disabled]: !textValue?.trim() || loading,
@@ -215,7 +225,11 @@ const TextInput = (props, ref) => {
                 }
               </div>
             ) : (
-              <SpeechToText onChange={setTextValue} />
+              <SpeechToText
+                onChange={changeInputByAudio}
+                inputMode={inputMode}
+                onFinish={onEnter}
+              />
             ))}
         </div>
       </div>
