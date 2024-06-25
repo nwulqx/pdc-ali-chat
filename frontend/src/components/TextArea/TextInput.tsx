@@ -58,7 +58,10 @@ const TextInput = (props, ref) => {
     ref,
     () => ({
       inputInstance: inputRef.current,
-      setTextValue,
+      setTextValue: (curValue: string) => {
+        setInputMode(INPUT_MODE.TEXT);
+        setTextValue(curValue);
+      },
       focus: () => {
         setTimeout(() => {
           inputRef.current?.focus();

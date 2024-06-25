@@ -4,15 +4,15 @@ import {
   useEffect,
   useImperativeHandle,
   useState,
-} from 'react';
-import cls from 'classnames';
-import MarkdownComponent from '@/components/MarkdownComp';
-import ChatContext, { IChatContext } from '@/context/chatContext';
-import { throttle } from 'lodash';
-import { IChatNode, IChatNodeItem } from '@/types/serivce';
-import styles from './index.module.less';
-import AnswerTools from '../AnswerTools';
-import store from '@/store';
+} from "react";
+import cls from "classnames";
+import MarkdownComponent from "@/components/MarkdownComp";
+import ChatContext, { IChatContext } from "@/context/chatContext";
+import { throttle } from "lodash";
+import { IChatNode, IChatNodeItem } from "@/types/serivce";
+import styles from "./index.module.less";
+import AnswerTools from "../AnswerTools";
+import store from "@/store";
 
 interface IAnswerItemProps {
   context: IChatContext;
@@ -29,14 +29,8 @@ interface IAnswerItemProps {
 }
 
 function AnswerItem(props: IAnswerItemProps, ref) {
-  const {
-    scrollToBottom,
-    onSwitchNode,
-    curEle,
-    isLast,
-    peerCount,
-    disabled,
-  } = props;
+  const { scrollToBottom, onSwitchNode, curEle, isLast, peerCount, disabled } =
+    props;
   const [text, setText] = useState(curEle.content.value);
   const context: IChatContext = useContext(ChatContext);
   const [appState] = store.useModel("app");
@@ -61,13 +55,13 @@ function AnswerItem(props: IAnswerItemProps, ref) {
     };
 
     if (curEle.flushing) {
-      props.context.chat.on('flush', onFlush);
+      props.context.chat.on("flush", onFlush);
     } else {
       setText(curEle.content.value);
-      props.context.chat.off('flush', onFlush);
+      props.context.chat.off("flush", onFlush);
     }
     return () => {
-      props.context.chat.off('flush', onFlush);
+      props.context.chat.off("flush", onFlush);
     };
   }, [curEle.flushing]);
 
@@ -76,9 +70,9 @@ function AnswerItem(props: IAnswerItemProps, ref) {
       if (node.msgId !== curEle.msgId) return;
       setText(node.content);
     };
-    context.chat.on('modifyValue', onModify);
+    context.chat.on("modifyValue", onModify);
     return () => {
-      context.chat.off('modifyValue', onModify);
+      context.chat.off("modifyValue", onModify);
     };
   }, []);
 
@@ -90,7 +84,14 @@ function AnswerItem(props: IAnswerItemProps, ref) {
         })}
       >
         {props.noAvatar ? null : (
-          <img className={styles.logo} src={curEle.flushing && appState.pageConfig.answer.animateLogo ? appState.pageConfig.answer.animateLogo : appState.pageConfig.answer.logo} />
+          <img
+            className={styles.logo}
+            src={
+              curEle.flushing && appState.pageConfig.answer.animateLogo
+                ? appState.pageConfig.answer.animateLogo
+                : appState.pageConfig.answer.logo
+            }
+          />
         )}
         <div className={styles.containerWrap}>
           <div className={styles.content}>

@@ -1,4 +1,5 @@
 import pdcLogo from "@/assets/images/pdc_logo.png";
+import porscheLogo from "@/assets/images/porsche_logo.png";
 
 export const TOAST_ICONS_MAP = {
   success: "icon-xiugaichenggong",
@@ -20,43 +21,46 @@ export const DEFAULT_PAGE_CONFIG = {
   headerLogo: pdcLogo,
   content: {
     logo: pdcLogo,
-    guideText: "你好，我是阿里云百炼大模型",
+    guideText: "你好，我是保时捷车载智能助手",
   },
   answer: {
-    logo: "https://img.alicdn.com/imgextra/i2/O1CN01YKwAFn1yP743zXR3r_!!6000000006570-55-tps-24-24.svg",
+    logo: porscheLogo,
   },
   textRecommends: [
     {
-      showData: "轻松获得金牌营销文案",
-      contentData: "轻松获得金牌营销文案",
-      iconUrl:
-        "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
-      title: "撰写营销文案",
+      showData:
+        "让我为您的驾驶之旅增添色彩，只需告诉我您的喜好，即可营造出匹配的灯光效果。",
+      contentData: "我正在听摇滚乐，帮我打造一个合适的氛围。",
+      // iconUrl:
+      //   "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
+      title: "氛围光影定制",
     },
     {
-      showData: "你也可以高情商",
-      contentData: "你也可以高情商",
-      iconUrl:
-        "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
-      title: "高情商回复",
+      showData:
+        "我将深入理解您的驾驶需求和环境变化，为您推荐独具保时捷风格的驾驶设定。",
+      contentData: "外面开始下雨，我应该如何调整驾驶模式？",
+      // iconUrl:
+      // "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
+      title: "智享驾驶建议",
     },
     {
-      showData: "制定专属健身计划",
-      contentData: "制定专属健身计划",
-      iconUrl:
-        "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
-      title: "AI 健身教练",
+      showData:
+        "我将根据您的目的地和个人偏好定制行程，并结合保时捷特色功能，提供专业驾驶建议。",
+      contentData: "我计划从成都自驾到稻城亚丁，需要一个三天的行程安排。",
+      // iconUrl:
+      //   "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
+      title: "行程规划向导",
     },
     {
-      showData: "送情书一直都很浪漫",
-      contentData: "送情书一直都很浪漫",
-      iconUrl:
-        "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
-      title: "写情书",
+      showData:
+        "我将结合保时捷车辆的卓越性能，为您提供精确的电量评估和充电建议。",
+      contentData: "我想知道当前电量是否足够我往返香山？",
+      // iconUrl:
+      //   "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
+      title: "里程续航管理",
     },
   ],
-  footerDesc:
-    "服务生成的所有内容均由人工智能模型生成，其生成内容的准确性和完整性无法保证",
+  footerDesc: "技术支持由阿里云百炼提供。",
 };
 
 export const darkTheme = {
