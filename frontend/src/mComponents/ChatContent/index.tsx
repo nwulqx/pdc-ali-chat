@@ -1,20 +1,20 @@
-import { throttle } from 'lodash';
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import { throttle } from "lodash";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
-import AnswerItem from '../AnswerItem';
-import QuestionItem from '../QuestionItem';
-import ChatContext, { IChatContext } from '@/context/chatContext';
-import store from '@/store';
+import AnswerItem from "../AnswerItem";
+import QuestionItem from "../QuestionItem";
+import ChatContext, { IChatContext } from "@/context/chatContext";
+import store from "@/store";
 
-import { ISessionItem } from '@/types/serivce';
-import GuideComp from './components/GuideComp';
-import IconFont from '@/components/IconFont';
-import TextArea from '../TextArea';
-import { ITextAreaRefProps } from '@/components/TextArea';
-import { v4 as uuidv4 } from 'uuid';
+import { ISessionItem } from "@/types/serivce";
+import GuideComp from "./components/GuideComp";
+import IconFont from "@/components/IconFont";
+import TextArea from "../TextArea";
+import { ITextAreaRefProps } from "@/components/TextArea";
+import { v4 as uuidv4 } from "uuid";
 
-import styles from './index.module.less';
-import { FormattedMessage } from 'react-intl';
+import styles from "./index.module.less";
+import { FormattedMessage } from "react-intl";
 
 const MOBILE_MISTAKE_DISTANCE = 120;
 
@@ -30,7 +30,7 @@ interface IChatContextProps {
 export default function ChatContent(props: IChatContextProps) {
   const { isSessionEnd } = props;
   const scrollRef = useRef(null as HTMLDivElement | null);
-  const [chatState, chatDispatchers] = store.useModel('app');
+  const [chatState, chatDispatchers] = store.useModel("app");
   const { loading } = chatState;
   const context: IChatContext = useContext(ChatContext);
   const inputRef = useRef(null as ITextAreaRefProps | null);
@@ -68,12 +68,12 @@ export default function ChatContent(props: IChatContextProps) {
         scrollToBottom();
       }, 300);
     };
-    context.chat.on('updateList', onUpdateList);
-    context.chat.on('flushEnd', onFlushEnd);
+    context.chat.on("updateList", onUpdateList);
+    context.chat.on("flushEnd", onFlushEnd);
     // context.chat.initData();
     return () => {
-      context.chat.off('updateList', onUpdateList);
-      context.chat.off('flushEnd', onFlushEnd);
+      context.chat.off("updateList", onUpdateList);
+      context.chat.off("flushEnd", onFlushEnd);
       context.chat.close();
       chatDispatchers.update({ loading: false });
     };
@@ -88,7 +88,7 @@ export default function ChatContent(props: IChatContextProps) {
     const distance = scrollHeight - scrollTop - clientHeight;
     if (distance >= MOBILE_MISTAKE_DISTANCE && !forceUpdate) return; // 没有贴到底部
     scrollRef.current?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: "smooth",
     });
   }, 300);
 
@@ -99,10 +99,11 @@ export default function ChatContent(props: IChatContextProps) {
   const onSubmit = async (text) => {
     if (!context.chat.conversation_id) {
       const updateSessionItem = {
-        sessionId: uuidv4().replace(/-/g, ''),
+        // sessionId: uuidv4().replace(/-/g, ''),
         summary: "",
-        firstQuery: ""
-      }
+        firstQuery: "",
+        selectedId: uuidv4().replace(/-/g, ""), // 判断是否已经开始对话
+      };
       props.updateSession(updateSessionItem);
     }
     if (!context.chat.conversation_id) return;
@@ -114,7 +115,7 @@ export default function ChatContent(props: IChatContextProps) {
   };
 
   const clickRecommend = (recommend: any) => {
-    chatDispatchers.update({ source: 'recommendation' });
+    chatDispatchers.update({ source: "recommendation" });
     inputRef.current?.setTextValue(recommend.contentData);
   };
 
@@ -126,10 +127,10 @@ export default function ChatContent(props: IChatContextProps) {
         {/* 对话主体 */}
         {list.map((el: any, index) => (
           <React.Fragment key={el.msgId}>
-            {el.type === 'q' && (
+            {el.type === "q" && (
               <QuestionItem key={el.msgId} text={el.content.value} />
             )}
-            {el.type === 'a' && (
+            {el.type === "a" && (
               <AnswerItem
                 disabled={isSessionEnd}
                 curEle={el}
@@ -152,7 +153,7 @@ export default function ChatContent(props: IChatContextProps) {
             {isSessionEnd ? (
               <span
                 onClick={() => {
-                  chatDispatchers.update({ source: 'new_middle' });
+                  chatDispatchers.update({ source: "new_middle" });
                   props.addSession();
                 }}
               >
@@ -163,7 +164,7 @@ export default function ChatContent(props: IChatContextProps) {
               list.length >= MAX_LEN && (
                 <span
                   onClick={() => {
-                    chatDispatchers.update({ source: 'new_middle' });
+                    chatDispatchers.update({ source: "new_middle" });
                     props.addSession();
                   }}
                 >

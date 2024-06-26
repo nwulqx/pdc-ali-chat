@@ -95,6 +95,10 @@ public class BailianLlmClient {
             object.put("dataId", completionRequest.getDataId());
             request.setBizParams(object);
         }
+        String sessionId = completionRequest.getSessionId();
+        if(StringUtils.isNotBlank(sessionId)){
+            request.setSessionId(sessionId);
+        }
 
         return client.streamCompletions(request);
     }

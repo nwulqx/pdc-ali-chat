@@ -1,10 +1,11 @@
-export type INodeType = 'q' | 'a' | 'root';
+export type INodeType = "q" | "a" | "root";
 export interface ISessionItem {
   sessionId: string;
   /* 摘要 */
   summary: string;
   /* 首问 */
   firstQuery: string;
+  selectedId?: string;
 }
 
 export interface IChatNodeItem {
@@ -17,7 +18,7 @@ export interface IChatNodeItem {
   interrupted: boolean;
   contentType: string;
   msgStatus?: string;
-  feedback: 'thumbsDown' | 'thumbsUp';
+  feedback: "thumbsDown" | "thumbsUp";
 }
 
 export interface IChatNode {

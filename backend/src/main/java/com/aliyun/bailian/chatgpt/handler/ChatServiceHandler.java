@@ -55,10 +55,14 @@ public class ChatServiceHandler {
         this.startTime = System.currentTimeMillis();
 
         String sessionId = request.getSessionId();
-        if (StringUtils.isBlank(sessionId)) {
-            sessionId = UUID.randomUUID().toString();
-            request.setSessionId(sessionId);
-        }
+        /**
+         * 这个 sessionId 应该由 chatgpt 维护，不应该交由客户端
+         * 
+         */
+        // if (StringUtils.isBlank(sessionId)) {
+        //     sessionId = UUID.randomUUID().toString();
+        //     request.setSessionId(sessionId);
+        // }
 
         Deque<ChatMessage> chatMessages = chatSessionService.getChatSessions(sessionId);
         request.setChatMessages(chatMessages);
@@ -124,7 +128,7 @@ public class ChatServiceHandler {
         }
 
         String requestId = request.getRequestId();
-        String sessionId = request.getSessionId();
+        String sessionId = response.getData().getSessionId();
         Result<CompletionResponseDTO> result = new Result<>();
 
         if (!response.isSuccess()) {

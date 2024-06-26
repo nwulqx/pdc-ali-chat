@@ -1,24 +1,23 @@
-import classnames from 'classnames';
-import { throttle } from 'lodash';
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import classnames from "classnames";
+import { throttle } from "lodash";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import AnswerItem from '@/components/AnswerItem';
-import QuestionItem from '@/components/QuestionItem';
-import ChatContext, { IChatContext } from '@/context/chatContext';
-import store from '@/store';
-import SimpleTextArea, { ITextAreaRefProps } from '../TextArea';
+import AnswerItem from "@/components/AnswerItem";
+import QuestionItem from "@/components/QuestionItem";
+import ChatContext, { IChatContext } from "@/context/chatContext";
+import store from "@/store";
+import SimpleTextArea, { ITextAreaRefProps } from "../TextArea";
 
-import { isMobile, onMobile } from '@/libs/utils';
-import { ISessionItem } from '@/types/serivce';
-import Toast from '../Toast';
-import IconFont from '../IconFont';
-import styles from './index.module.less';
-import GuideComp from './components/GuideComp';
-import NewButton from '../NewButton';
-import useBus from 'use-bus';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { v4 as uuidv4 } from 'uuid';
-
+import { isMobile, onMobile } from "@/libs/utils";
+import { ISessionItem } from "@/types/serivce";
+import Toast from "../Toast";
+import IconFont from "../IconFont";
+import styles from "./index.module.less";
+import GuideComp from "./components/GuideComp";
+import NewButton from "../NewButton";
+import useBus from "use-bus";
+import { FormattedMessage, useIntl } from "react-intl";
+import { v4 as uuidv4 } from "uuid";
 
 const MISTAKE_DISTANCE = 100;
 const MOBILE_MISTAKE_DISTANCE = 120;
@@ -38,7 +37,7 @@ interface IChatContextProps {
 export default function ChatContent(props: IChatContextProps) {
   const { isSessionEnd } = props;
   const scrollRef = useRef(null as HTMLDivElement | null);
-  const [chatState, chatDispatchers] = store.useModel('app');
+  const [chatState, chatDispatchers] = store.useModel("app");
   const { loading } = chatState;
   const context: IChatContext = useContext(ChatContext);
   const [qFocus, setQfocus] = useState(false);
@@ -50,7 +49,7 @@ export default function ChatContent(props: IChatContextProps) {
     isSessionEnd: true,
   });
   const [list, setList] = useState<any>([]);
-  const [flushingText, setFlushingText] = useState('');
+  const [flushingText, setFlushingText] = useState("");
   const [flushingTextIsNull, setFlushingTextIsNull] = useState(true);
   const intl = useIntl();
 
@@ -67,14 +66,14 @@ export default function ChatContent(props: IChatContextProps) {
   };
 
   useBus(
-    '@@ui/TAB_CHANGE_ANIMATION',
+    "@@ui/TAB_CHANGE_ANIMATION",
     () => {
       setFadeOut(true);
       setTimeout(() => {
         setFadeOut(false);
       }, 1000);
     },
-    [],
+    []
   );
 
   useEffect(() => {
@@ -90,7 +89,7 @@ export default function ChatContent(props: IChatContextProps) {
     };
     const onUpdateList = (_list) => {
       setList(_list.map((item) => JSON.parse(JSON.stringify(item))));
-      setFlushingText(_list[_list.length - 1]?.content?.value || '');
+      setFlushingText(_list[_list.length - 1]?.content?.value || "");
       setTimeout(() => {
         if (
           (scrollConRef.current?.scrollHeight || 0) <=
@@ -100,22 +99,22 @@ export default function ChatContent(props: IChatContextProps) {
         scrollToBottom();
       }, 300);
     };
-    context.chat.on('updateList', onUpdateList);
-    context.chat.on('flush', onFlush);
-    context.chat.on('flushEnd', onFlushEnd);
+    context.chat.on("updateList", onUpdateList);
+    context.chat.on("flush", onFlush);
+    context.chat.on("flushEnd", onFlushEnd);
 
     return () => {
-      context.chat.off('updateList', onUpdateList);
-      context.chat.off('flush', onFlush);
-      context.chat.off('flushEnd', onFlushEnd);
+      context.chat.off("updateList", onUpdateList);
+      context.chat.off("flush", onFlush);
+      context.chat.off("flushEnd", onFlushEnd);
       context.chat.close();
       chatDispatchers.update({ loading: false });
     };
   }, [setFlushingText, setList]);
 
   useEffect(() => {
-    chatDispatchers.update({ inputText: '' });
-    inputRef.current?.setTextValue('');
+    chatDispatchers.update({ inputText: "" });
+    inputRef.current?.setTextValue("");
   }, [props.chatKey, chatDispatchers]);
 
   const scrollToBottom = throttle((smooth = true, forceUpdate = true) => {
@@ -132,9 +131,9 @@ export default function ChatContent(props: IChatContextProps) {
     scrollRef.current?.scrollIntoView(
       smooth
         ? {
-            behavior: 'smooth',
+            behavior: "smooth",
           }
-        : {},
+        : {}
     );
   }, 300);
 
@@ -154,7 +153,10 @@ export default function ChatContent(props: IChatContextProps) {
 
   const onRegenerate = () => {
     if ((list[list.length - 1] as any)?.peerCount >= 5) {
-      Toast.show({ type: 'warning', message: intl.formatMessage({ id: "regenerationDisabledTip" }) });
+      Toast.show({
+        type: "warning",
+        message: intl.formatMessage({ id: "regenerationDisabledTip" }),
+      });
       return;
     }
     chatDispatchers.update({ loading: true });
@@ -163,29 +165,27 @@ export default function ChatContent(props: IChatContextProps) {
 
   const onSubmit = async (text, inputType, options = {}) => {
     const updateSessionItem = {
-      sessionId: uuidv4().replace(/-/g, ''),
+      // sessionId: uuidv4().replace(/-/g, ''),
       sessionType: inputType || chatState.sessionType,
       summary: "",
-      firstQuery: ''
-    }
+      firstQuery: "",
+      selectedId: uuidv4().replace(/-/g, ""), // 判断是否已经开始对话
+    };
     if (!context.chat.conversation_id) {
-      if (!chatState.source) chatDispatchers.update({ source: 'new' });
+      if (!chatState.source) chatDispatchers.update({ source: "new" });
       props.updateSession(updateSessionItem);
     }
     if (!updateSessionItem && !context.chat.conversation_id) return;
     chatDispatchers.update({ loading: true });
-    context.chat.normalGenerate(
-      text,
-      {
-        sessionType: inputType || chatState.sessionType,
-        ...options,
-      }
-    );
+    context.chat.normalGenerate(text, {
+      sessionType: inputType || chatState.sessionType,
+      ...options,
+    });
     scrollToBottom();
   };
 
   const clickRecommend = (recommend: any) => {
-    chatDispatchers.update({ source: 'recommendation' });
+    chatDispatchers.update({ source: "recommendation" });
     inputRef.current?.setTextValue(recommend.contentData);
     inputRef.current?.focus();
   };
@@ -204,7 +204,9 @@ export default function ChatContent(props: IChatContextProps) {
               className={classnames(styles.icon, styles.endIcon)}
               type="icon-tingzhihuida_default"
             />
-            <span><FormattedMessage id="stopGeneration" /></span>
+            <span>
+              <FormattedMessage id="stopGeneration" />
+            </span>
           </div>
         </NewButton>
       );
@@ -216,7 +218,7 @@ export default function ChatContent(props: IChatContextProps) {
     if (props.selectedId) {
       return null;
     }
-    if (chatState.sessionType === 'doc_chat') {
+    if (chatState.sessionType === "doc_chat") {
       return (
         <div key={2} className={styles.sysTip}>
           <FormattedMessage id="docsDesc" />
@@ -245,7 +247,7 @@ export default function ChatContent(props: IChatContextProps) {
           })}
         >
           {list.map((el: any, index) => {
-            if (el.type === 'q') {
+            if (el.type === "q") {
               return (
                 <QuestionItem
                   noAvatar={onMobile}
@@ -263,7 +265,7 @@ export default function ChatContent(props: IChatContextProps) {
                   }}
                 />
               );
-            } else if (el.type === 'a') {
+            } else if (el.type === "a") {
               return (
                 <AnswerItem
                   ref={answerItemRef}
@@ -293,7 +295,7 @@ export default function ChatContent(props: IChatContextProps) {
                 <div
                   className={styles.text}
                   onClick={() => {
-                    chatDispatchers.update({ source: 'new_middle' });
+                    chatDispatchers.update({ source: "new_middle" });
                     props.addSession();
                   }}
                 >
@@ -322,7 +324,7 @@ export default function ChatContent(props: IChatContextProps) {
           onClick={() => {
             if (chatState.questionIsEdit) {
               Toast.show({
-                type: 'warning',
+                type: "warning",
                 message: intl.formatMessage({ id: "loadingEdit" }),
               });
               return;
