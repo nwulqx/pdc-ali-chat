@@ -56,3 +56,6 @@ chat:
 aliyun:
   appKey: 242HzDFWvNCJJxAl
   url: wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1
+
+pdc:
+  tts: http://47.97.217.55:8080
