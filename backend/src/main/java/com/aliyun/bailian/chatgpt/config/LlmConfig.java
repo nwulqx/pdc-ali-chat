@@ -1,8 +1,11 @@
 package com.aliyun.bailian.chatgpt.config;
 
 import lombok.Data;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
@@ -46,6 +49,13 @@ public class LlmConfig {
     private String endpoint;
 
     private String nlsKey;
+
+    @Getter
+    private Integer seed;
+
+    @Getter
+    private Integer topK;
+
     public String getAccessKeyId() {
         String val = System.getenv("ACCESS_KEY_ID");
         if (StringUtils.isNotBlank(val)) {

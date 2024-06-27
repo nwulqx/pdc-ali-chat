@@ -99,7 +99,11 @@ public class BailianLlmClient {
         if(StringUtils.isNotBlank(sessionId)){
             request.setSessionId(sessionId);
         }
+        CompletionsRequest.Parameter param = new CompletionsRequest.Parameter();
+        param.setSeed(llmConfig.getSeed());
+        param.setTopK(llmConfig.getTopK());
 
+        request.setParameters(param);
         return client.streamCompletions(request);
     }
 }

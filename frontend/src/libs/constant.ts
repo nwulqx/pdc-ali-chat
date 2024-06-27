@@ -46,21 +46,20 @@ export const DEFAULT_PAGE_CONFIG = {
     {
       showData:
         "我将根据您的目的地和个人偏好定制行程，并结合保时捷特色功能，提供专业驾驶建议。",
-      contentData: "我计划从成都自驾到稻城亚丁，需要一个三天的行程安排。",
+      contentData: "帮我规划一个从杭州东站自驾到西湖的路线",
       // iconUrl:
       //   "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
       title: "行程规划向导",
     },
     {
-      showData:
-        "我将结合保时捷车辆的卓越性能，为您提供精确的电量评估和充电建议。",
-      contentData: "我想知道当前电量是否足够我往返香山？",
+      showData: "深入了解保时捷品牌故事和历史传承，感受背后的灵感与创新。",
+      contentData: "给我讲讲Macan这个名字的由来",
       // iconUrl:
       //   "https://img.alicdn.com/imgextra/i4/O1CN01oQiXDF1mn8RoGCZyH_!!6000000004998-55-tps-20-20.svg",
-      title: "里程续航管理",
+      title: "品牌故事探索",
     },
   ],
-  footerDesc: "技术支持由阿里云百炼提供。",
+  footerDesc: "技术支持由阿里云通义千问提供",
 };
 
 export const darkTheme = {
