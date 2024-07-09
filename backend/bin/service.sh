@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP_HOME=../
+APP_HOME=$(dirname $(dirname $(realpath $0)))
 APP_NAME=chat-sample
 LOG_PATH=${APP_HOME}/logs
 CMD="java -Xbootclasspath/a:${APP_HOME}/conf/ -jar ${APP_HOME}/chat-sample.jar --spring.config.name=application --spring.config.location=${APP_HOME}/conf/"
