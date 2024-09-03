@@ -268,6 +268,7 @@ export default function ChatContent(props: IChatContextProps) {
             } else if (el.type === "a") {
               return (
                 <AnswerItem
+                  flushingTextIsNull={flushingTextIsNull}
                   ref={answerItemRef}
                   noAvatar={onMobile}
                   disabled={isSessionEnd}

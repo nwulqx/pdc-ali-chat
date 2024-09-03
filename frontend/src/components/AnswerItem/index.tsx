@@ -13,6 +13,7 @@ import { IChatNode, IChatNodeItem } from "@/types/serivce";
 import styles from "./index.module.less";
 import AnswerTools from "../AnswerTools";
 import store from "@/store";
+import WebsocketTTS from "../WebsocketTTS";
 
 interface IAnswerItemProps {
   context: IChatContext;
@@ -26,11 +27,19 @@ interface IAnswerItemProps {
   disabled?: boolean;
   current: number;
   noAvatar?: boolean;
+  flushingTextIsNull?: boolean;
 }
 
 function AnswerItem(props: IAnswerItemProps, ref) {
-  const { scrollToBottom, onSwitchNode, curEle, isLast, peerCount, disabled } =
-    props;
+  const {
+    scrollToBottom,
+    onSwitchNode,
+    curEle,
+    isLast,
+    peerCount,
+    disabled,
+    flushingTextIsNull,
+  } = props;
   const [text, setText] = useState(curEle.content.value);
   const context: IChatContext = useContext(ChatContext);
   const [appState] = store.useModel("app");
@@ -121,6 +130,7 @@ function AnswerItem(props: IAnswerItemProps, ref) {
             reRun={handleReGenerate}
           />
         </div>
+        <WebsocketTTS text={text} flushingTextIsNull={!!flushingTextIsNull} />
       </div>
     </div>
   );

@@ -1,8 +1,6 @@
 package com.aliyun.bailian.chatgpt.handler;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONValidator;
 import com.aliyun.bailian.chatgpt.client.BailianLlmClient;
 import com.aliyun.bailian.chatgpt.dto.CompletionRequestDTO;
@@ -15,17 +13,19 @@ import com.aliyun.bailian.chatgpt.service.ChatSessionService;
 import com.aliyun.bailian.chatgpt.utils.LogUtils;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Deque;
-import java.util.UUID;
+import java.util.*;
+
 
 /**
  * 对话服务处理
  *
  * @author yuanci
  */
+@Service
 public class ChatServiceHandler {
     private final ChatSessionService chatSessionService;
 
@@ -57,11 +57,11 @@ public class ChatServiceHandler {
         String sessionId = request.getSessionId();
         /**
          * 这个 sessionId 应该由 chatgpt 维护，不应该交由客户端
-         * 
+         *
          */
         // if (StringUtils.isBlank(sessionId)) {
-        //     sessionId = UUID.randomUUID().toString();
-        //     request.setSessionId(sessionId);
+        // sessionId = UUID.randomUUID().toString();
+        // request.setSessionId(sessionId);
         // }
 
         Deque<ChatMessage> chatMessages = chatSessionService.getChatSessions(sessionId);
@@ -141,16 +141,6 @@ public class ChatServiceHandler {
 
             result.setSuccess(true);
             String responseText = response.getData().getText();
-
-            //ugly compatibility for backend logic
-            boolean isJson = isValidJson(responseText);
-            if (isJson) {
-                JSONObject jsonObject = JSON.parseObject(responseText);
-                String answer = jsonObject.getString("Answer");
-                if (answer != null) {
-                    responseText = answer;
-                }
-            }
 
             CompletionResponseDTO responseDTO = new CompletionResponseDTO();
             responseDTO.setContentType("text");

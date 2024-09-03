@@ -60,5 +60,12 @@ aliyun:
   appKey: 242HzDFWvNCJJxAl
   url: wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1
 
+TTSFlowing:
+  speechVoice: siyue
+  speechVolume: 50
+  speechPitchRate: 0
+  speechRate: 0
+  minSendIntervalMS: 100
+
 pdc:
   tts: http://47.97.217.55:8080

@@ -47,7 +47,7 @@ const AudioPlayer: React.FC<Props> = ({ text }) => {
     }
   };
   useEffect(() => {
-    audioPlay();
+    // audioPlay(); //与流式实时语音冲突，先不自动播放了
   }, [audioUrl]);
 
   return (
