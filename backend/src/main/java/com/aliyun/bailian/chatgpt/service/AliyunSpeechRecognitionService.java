@@ -42,9 +42,8 @@ public class AliyunSpeechRecognitionService implements SpeechRecognitionService 
 
         SpeechRecognizer recognizer = null;
         try {
-            System.out.println("tokenService"+tokenService.getToken());
-            NlsClient client = new NlsClient(tokenService.getToken());
-            recognizer = new SpeechRecognizer(client, getRecognizerListener(resultFuture));
+            NlsClient nlsClient =  tokenService.getNlsClient();
+            recognizer = new SpeechRecognizer(nlsClient, getRecognizerListener(resultFuture));
             recognizer.setAppKey(appKey);
             recognizer.setFormat(InputFormatEnum.PCM);
             recognizer.setSampleRate(SampleRateEnum.SAMPLE_RATE_16K);

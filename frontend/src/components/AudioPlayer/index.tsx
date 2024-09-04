@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getAudio, getAudioFromAli } from "./utils";
+import { getAudioFromAli } from "./utils";
 import styles from "./index.module.less";
 import { AudioOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useLocation } from "@ice/runtime";
@@ -19,7 +19,7 @@ const AudioPlayer: React.FC<Props> = ({ text }) => {
     if (!curText) return;
     setLoading(true);
     try {
-      const getAudioService = source === "aliyun" ? getAudioFromAli : getAudio;
+      const getAudioService = getAudioFromAli;
       const audioBlob = await getAudioService(curText);
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);

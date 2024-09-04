@@ -20,7 +20,7 @@ import java.util.List;
 public class TtsService {
 
     @Autowired
-    private NlsClient nlsClient;
+    private TokenService tokenService;
 
     @Value("${aliyun.appKey}")
     private String appKey;
@@ -56,6 +56,7 @@ public class TtsService {
         SpeechSynthesizer synthesizer = null;
 
         try {
+            NlsClient nlsClient = tokenService.getNlsClient(); // 获取带有最新 token 的 NlsClient
             synthesizer = new SpeechSynthesizer(nlsClient, getSynthesizerListener(out));
             synthesizer.setAppKey(appKey);
             synthesizer.setFormat(OutputFormatEnum.PCM);

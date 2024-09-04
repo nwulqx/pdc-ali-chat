@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-
 @Service
 public class FlowingSpeechSynthesizerService {
 
@@ -35,20 +33,12 @@ public class FlowingSpeechSynthesizerService {
     @Value("${TTSFlowing.minSendIntervalMS}")
     private int minSendIntervalMS;
 
-
-    private NlsClient client;
-
-    @PostConstruct
-    public void initialize() {
-        String token = tokenService.getToken();
-        this.client = new NlsClient(token);
-    }
-
     public String synthesize(String content) {
         FlowingSpeechSynthesizer synthesizer = null;
         CustomSpeechSynthesizerListener listener = new CustomSpeechSynthesizerListener();
         try {
-            synthesizer = new FlowingSpeechSynthesizer(client, listener);
+            NlsClient nlsClient = tokenService.getNlsClient();
+            synthesizer = new FlowingSpeechSynthesizer(nlsClient, listener);
             synthesizer.setAppKey(appKey);
             synthesizer.setFormat(OutputFormatEnum.WAV);
             synthesizer.setSampleRate(SampleRateEnum.SAMPLE_RATE_16K);

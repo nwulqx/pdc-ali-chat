@@ -3,8 +3,6 @@ package com.aliyun.bailian.chatgpt.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.alibaba.nls.client.protocol.NlsClient;
-import com.aliyun.bailian.chatgpt.service.TokenService;
 
 @Configuration
 public class AliyunConfig {
@@ -20,11 +18,6 @@ public class AliyunConfig {
 
     @Value("${aliyun.url}")
     private String url;
-
-    @Bean
-    public NlsClient nlsClient(TokenService tokenService) {
-        return new NlsClient(url.isEmpty() ? tokenService.getToken() : url, tokenService.getToken());
-    }
 
     @Bean
     public String appKey() {

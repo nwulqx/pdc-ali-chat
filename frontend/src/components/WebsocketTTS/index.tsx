@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import useWebSocket from "react-use-websocket";
+import { Howl } from "howler";
 import { usePrevious } from "ahooks";
 import { isPunctuation } from "./utils";
 
@@ -15,24 +16,51 @@ const WebsocketTTS = ({ text, flushingTextIsNull }: Props) => {
   );
   const previousText = usePrevious(text);
   const accumulatedDiffRef = useRef(""); // 使用 useRef 保存 accumulatedDiff
-  const audioContextRef = useRef(
-    new (window.AudioContext || window.webkitAudioContext)()
-  );
-  const audioBufferQueueRef = useRef<AudioBuffer[]>([]);
   const isPlayingRef = useRef(false);
+  const audioQueueRef = useRef<ArrayBuffer[]>([]); // 用于存放未播放的音频数据
+
+  const playNextAudio = () => {
+    if (audioQueueRef.current.length > 0) {
+      const arrayBuffer = audioQueueRef.current.shift()!;
+      playAudio(arrayBuffer);
+    } else {
+      isPlayingRef.current = false; // 队列空时，标记停止播放
+    }
+  };
+
+  const playAudio = (arrayBuffer: ArrayBuffer) => {
+    const blob = new Blob([arrayBuffer], { type: "audio/wav" });
+    const url = URL.createObjectURL(blob);
+
+    const sound = new Howl({
+      src: [url],
+      format: ["wav"],
+      onend: () => {
+        URL.revokeObjectURL(url); // 释放资源
+        playNextAudio(); // 播放队列中的下一个音频
+      },
+      onloaderror: () => {
+        URL.revokeObjectURL(url); // 出错时也要释放资源
+        playNextAudio(); // 跳过播放出错的音频，继续播放下一个
+      },
+      onstop: () => {
+        URL.revokeObjectURL(url); // 手动停止时释放资源
+        playNextAudio();
+      },
+    });
+
+    sound.play();
+  };
 
   useEffect(() => {
     if (lastMessage && lastMessage.data) {
       const audioData = lastMessage.data;
-
-      // Decode the base64 audio data
       const arrayBuffer = base64ToArrayBuffer(audioData);
-      audioContextRef.current.decodeAudioData(arrayBuffer, (buffer) => {
-        audioBufferQueueRef.current.push(buffer);
-        if (!isPlayingRef.current) {
-          playAudio();
-        }
-      });
+      audioQueueRef.current.push(arrayBuffer); // 将音频添加到队列
+      if (!isPlayingRef.current) {
+        isPlayingRef.current = true; // 开始播放时标记为播放中
+        playNextAudio(); // 播放队列中的音频
+      }
     }
   }, [lastMessage]);
 
@@ -46,22 +74,6 @@ const WebsocketTTS = ({ text, flushingTextIsNull }: Props) => {
     return bytes.buffer;
   };
 
-  const playAudio = () => {
-    if (audioBufferQueueRef.current.length > 0) {
-      isPlayingRef.current = true;
-      const buffer = audioBufferQueueRef.current.shift();
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = buffer!;
-      source.connect(audioContextRef.current.destination);
-      source.start(0);
-
-      source.onended = () => {
-        isPlayingRef.current = false;
-        playAudio();
-      };
-    }
-  };
-
   useEffect(() => {
     if (text && text !== previousText) {
       // 找到两个文本之间的增量部分
@@ -73,7 +85,13 @@ const WebsocketTTS = ({ text, flushingTextIsNull }: Props) => {
           accumulatedDiffRef.current[accumulatedDiffRef.current.length - 1]
         )
       ) {
-        sendMessage(accumulatedDiffRef.current); // 通过 WebSocket 发送累积的文本
+        const filteredText = accumulatedDiffRef.current.replace(
+          /[\/\\<>{}[\]]/g,
+          ""
+        );
+        if (filteredText) {
+          sendMessage(filteredText); // 通过 WebSocket 发送累积的文本
+        }
         accumulatedDiffRef.current = ""; // 清零差异，重新开始新的差异计算
       }
     }
@@ -85,6 +103,7 @@ const WebsocketTTS = ({ text, flushingTextIsNull }: Props) => {
       accumulatedDiffRef.current = ""; // 清零差异，重新开始新的差异计算
     }
   }, [flushingTextIsNull]);
+
   return <></>;
 };
 
