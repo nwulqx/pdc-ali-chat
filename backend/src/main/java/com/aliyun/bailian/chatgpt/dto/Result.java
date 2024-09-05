@@ -15,11 +15,6 @@ public class Result<T> implements Serializable {
     private static final long serialVersionUID = -488730624643299315L;
 
     /**
-     * request id of completion
-     */
-    private String requestId;
-
-    /**
      * success or not
      */
     private boolean success = true;
@@ -49,7 +44,6 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success(String requestId, T data) {
         Result<T> result = new Result<>();
         result.setSuccess(true);
-        result.setRequestId(requestId);
         result.setData(data);
         return result;
     }
@@ -66,7 +60,6 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> error(String requestId, String errorCode, String errorMsg) {
         Result<T> result = new Result<>();
         result.setSuccess(false);
-        result.setRequestId(requestId);
         result.setErrorCode(errorCode);
         result.setErrorMsg(errorMsg);
         return result;
@@ -92,7 +85,6 @@ public class Result<T> implements Serializable {
         Result<T> result = new Result<>();
         result.setSuccess(false);
 
-        result.setRequestId(requestId);
         result.setErrorCode(errorCodeEnum.getErrorCode());
         result.setErrorMsg(errorCodeEnum.getErrorMessage());
         return result;
