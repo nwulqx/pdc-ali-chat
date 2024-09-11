@@ -9,28 +9,52 @@ import com.alibaba.dashscope.audio.tts.SpeechSynthesisResult;
 import com.alibaba.dashscope.common.ResultCallback;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
 import com.aliyun.bailian.chatgpt.config.LlmDashConfig;
+import com.aliyun.bailian.chatgpt.config.XMLYSpeechConfig;
 import com.aliyun.bailian.chatgpt.dto.DashLlmResponseDTO;
 import com.aliyun.bailian.chatgpt.dto.DashLlmVoiceResponseDTO;
 import com.aliyun.bailian.chatgpt.dto.Result;
+import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisRequest;
+import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisResponse;
+import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisResultDTO;
+import com.aliyun.bailian.chatgpt.service.SpeechSynthesisService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Flowable;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import javax.annotation.Resource;
+import javax.annotation.PreDestroy;
 import javax.sound.sampled.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 @Component
 public class LLmDashClient {
 
-    @Resource
-    private LlmDashConfig llmDashConfig; // 注入配置信息
-    private final ExecutorService audioExecutor = Executors.newFixedThreadPool(2);
+    @Autowired
+    private LlmDashConfig llmDashConfig;
+
+    @Autowired
+    private SpeechSynthesisService speechSynthesisService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private XMLYSpeechConfig xmlySpeechConfig;
+
+    private final ExecutorService textProcessorExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService resultProcessorExecutor = Executors.newSingleThreadExecutor();
+    private final BlockingQueue<SpeechTask> taskQueue = new LinkedBlockingQueue<>();
+
+    private final StringBuilder textBuffer = new StringBuilder();
+    private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；]");
 
     // 提取 ApplicationParam 的构建逻辑，减少重复
     private ApplicationParam buildApplicationParam(String prompt, String sessionId) {
@@ -77,7 +101,7 @@ public class LLmDashClient {
     public SseEmitter streamText(String prompt, String sessionId) {
         SseEmitter emitter = new SseEmitter();
 
-        // 使用提取的构建方法来创建 ApplicationParam
+        // 用提取的构建方法来创建 ApplicationParam
         ApplicationParam param = buildApplicationParam(prompt, sessionId);
 
         // 异步调用生成文本
@@ -130,7 +154,7 @@ public class LLmDashClient {
                 callback.setRequestAndSessionId(requestId, responseSessionId);
 
                 // 生成对应的语音片段并推送到客户端
-                audioExecutor.submit(() -> processAndSendSpeechSegment(synthesizer, textSegment, emitter));
+                textProcessorExecutor.submit(() -> processAndSendSpeechSegment(synthesizer, textSegment, emitter));
 
             }, e -> {
                 // 处理错误
@@ -275,11 +299,11 @@ public class LLmDashClient {
                 responseDTO.setContentType("text");
                 emitter.send(SseEmitter.event().data(Result.success(responseDTO)));
 
-                // 更新回调中的 requestId 和 sessionId
+                // 更回调中的 requestId 和 sessionId
                 callback.setRequestAndSessionId(requestId, responseSessionId);
 
                 // 异步生成语音片段并推送
-                audioExecutor.submit(() -> processAndSendSpeechSegment(synthesizer, textSegment, emitter));
+                textProcessorExecutor.submit(() -> processAndSendSpeechSegment(synthesizer, textSegment, emitter));
 
             }, e -> {
                 // 处理错误
@@ -294,5 +318,147 @@ public class LLmDashClient {
         }
 
         return emitter;
+    }
+
+    public SseEmitter streamSpeechWithXMLY(String prompt, String sessionId, String speechModel) {
+        SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
+        AtomicBoolean isCompleted = new AtomicBoolean(false);
+
+        ApplicationParam param = buildApplicationParam(prompt, sessionId);
+
+        // 启动结果处理线程
+        resultProcessorExecutor.submit(() -> pollResults(emitter, sessionId, isCompleted));
+
+        // 启动文本处理线程
+        textProcessorExecutor.submit(() -> {
+            try {
+                Application application = new Application();
+                Flowable<ApplicationResult> resultStream = application.streamCall(param);
+
+                resultStream.blockingForEach(data -> {
+                    String text = data.getOutput().getText();
+                    System.out.println("Received text: " + text);
+                    if (!text.isEmpty()) {
+                        processText(text, sessionId, speechModel);
+                    }
+                });
+
+                // 处理可能剩余在缓冲区的文本
+                if (textBuffer.length() > 0) {
+                    processSentence(textBuffer.toString(), sessionId, speechModel);
+                    textBuffer.setLength(0);
+                }
+
+                isCompleted.set(true);
+            } catch (Exception e) {
+                System.err.println("Error in text processing: " + e.getMessage());
+                isCompleted.set(true);
+                emitter.completeWithError(e);
+            }
+        });
+
+        return emitter;
+    }
+
+    private void processText(String text, String sessionId, String speechModel) {
+        textBuffer.append(text);
+        int lastIndex = 0;
+        java.util.regex.Matcher matcher = SENTENCE_END_PATTERN.matcher(textBuffer);
+
+        while (matcher.find()) {
+            String sentence = textBuffer.substring(lastIndex, matcher.end());
+            processSentence(sentence, sessionId, speechModel);
+            lastIndex = matcher.end();
+        }
+
+        // 移除已处理的文本
+        if (lastIndex > 0) {
+            textBuffer.delete(0, lastIndex);
+        }
+    }
+
+    private void processSentence(String sentence, String sessionId, String speechModel) {
+        SpeechSynthesisRequest request = createSpeechRequest(sentence, speechModel);
+        SpeechSynthesisResponse response = speechSynthesisService.initiateSpeechSynthesis(request);
+        if (response.isSuccess() && response.getData() != null) {
+            taskQueue.offer(new SpeechTask(response.getData().getRequestId(), sessionId));
+        } else {
+            System.err.println("Speech synthesis initiation failed: " + response.getMessage());
+        }
+    }
+
+    private void pollResults(SseEmitter emitter, String sessionId, AtomicBoolean isCompleted) {
+        System.out.println("Starting pollResults for sessionId: " + sessionId);
+        while (!isCompleted.get() || !taskQueue.isEmpty()) {
+            try {
+                SpeechTask task = taskQueue.peek(); // 只查看队列头部元素,不移除
+                if (task != null) {
+                    SpeechSynthesisResultDTO result = speechSynthesisService.fetchSpeechSynthesisResult(task.getRequestId());
+                    if (result != null) {
+                        if (result.getCode() == 201003) {
+                            DashLlmVoiceResponseDTO responseDTO = new DashLlmVoiceResponseDTO();
+                            responseDTO.setContent(result.getData().getAudio());
+                            responseDTO.setSessionId(task.getSessionId());
+                            responseDTO.setContentType("audio");
+                            responseDTO.setRequestId(task.getRequestId());
+
+                            emitter.send(SseEmitter.event().data(Result.success(responseDTO)));
+                            System.out.println("Sent audio result for requestId: " + task.getRequestId());
+
+                            taskQueue.poll(); // 只有在成功处理后才移除任务
+                        } else {
+                            System.out.println("Result not ready, code: " + result.getCode() + " for requestId: "
+                                    + task.getRequestId());
+                            // 结果未准备好,不做任何操作,保持任务在队列中
+                        }
+                    } else {
+                        System.out.println("No result for requestId: " + task.getRequestId());
+                        // 没有结果,不做任何操作,保持任务在队列中
+                    }
+                }
+                Thread.sleep(1000); // 每1000ms检查一次
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("pollResults interrupted for sessionId: " + sessionId);
+                break;
+            } catch (Exception e) {
+                System.err.println("Error in pollResults for sessionId " + sessionId + ": " + e.getMessage());
+            }
+        }
+        System.out.println("pollResults finished for sessionId: " + sessionId);
+        emitter.complete();
+    }
+
+    private SpeechSynthesisRequest createSpeechRequest(String text, String speechModel) {
+        return new SpeechSynthesisRequest(text, xmlySpeechConfig);
+    }
+
+    private static class SpeechTask {
+        @Getter
+        private final String requestId;
+        @Getter
+        private final String sessionId;
+
+        public SpeechTask(String requestId, String sessionId) {
+            this.requestId = requestId;
+            this.sessionId = sessionId;
+        }
+    }
+
+    @PreDestroy
+    public void destroy() {
+        textProcessorExecutor.shutdown();
+        resultProcessorExecutor.shutdown();
+        try {
+            if (!textProcessorExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                textProcessorExecutor.shutdownNow();
+            }
+            if (!resultProcessorExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                resultProcessorExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            textProcessorExecutor.shutdownNow();
+            resultProcessorExecutor.shutdownNow();
+        }
     }
 }

@@ -69,3 +69,12 @@ TTSFlowing:
 
 pdc:
   tts: http://47.97.217.55:8080
+
+xmly:
+  authToken:
+  rate: 55.0
+  volume: 50.0
+  pitch: 60.0
+  domain: 播客
+  speakerName: 保时捷音色克隆测试V1Pro
+  speakerVariant: 自然聊天
