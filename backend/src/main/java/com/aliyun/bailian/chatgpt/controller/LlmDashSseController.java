@@ -25,14 +25,19 @@ public class LlmDashSseController {
     public SseEmitter streamSpeech(@RequestBody DashLlmRequestDTO request) {
         String prompt = request.getPrompt();
         String sessionId = request.getSessionId();
-        return llmDashClient.streamSpeechWithXMLY(prompt, sessionId, "");
+        String audioSource = request.getAudioSource();
+        if (audioSource != null && audioSource.equals("alicloud")) {
+            return llmDashClient.streamSpeech(prompt, sessionId);
+        }
+        return llmDashClient.streamSpeechWithXMLY(prompt, sessionId);
     }
 
     // 提供文本+语音流 SSE 服务
-    @PostMapping("/v1/stream-text-and-speech")
-    public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request) {
-        String prompt = request.getPrompt();
-        String sessionId = request.getSessionId();
-        return llmDashClient.streamTextAndSpeech(prompt, sessionId);
-    }
+    // @PostMapping("/v1/stream-text-and-speech")
+    // public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request)
+    // {
+    // String prompt = request.getPrompt();
+    // String sessionId = request.getSessionId();
+    // return llmDashClient.streamTextAndSpeech(prompt, sessionId);
+    // }
 }

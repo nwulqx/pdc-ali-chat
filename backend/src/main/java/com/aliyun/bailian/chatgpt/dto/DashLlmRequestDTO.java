@@ -18,4 +18,10 @@ public class DashLlmRequestDTO extends RequestBase {
     private String prompt;
 
     private String userId;
+    /**
+     * himalaya: 喜马拉雅语音 默认
+     * alicloud: 阿里语音
+     */
+    private String audioSource;
+
 }
