@@ -47,6 +47,7 @@ public class LLmDashClient {
 
     private final StringBuilder textBuffer = new StringBuilder();
     private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；]");
+    private int priority = 1000;
 
     // 提取 ApplicationParam 的构建逻辑，减少重复
     private ApplicationParam buildApplicationParam(String prompt, String sessionId) {
@@ -216,6 +217,8 @@ public class LLmDashClient {
         AtomicBoolean isTextCompleted = new AtomicBoolean(false);
         AtomicBoolean isEmitterClosed = new AtomicBoolean(false);
 
+        priority = 1000; // 在这里初始化priority
+
         ApplicationParam param = buildApplicationParam(prompt, sessionId);
 
         // 启动结果处理线程
@@ -236,13 +239,13 @@ public class LLmDashClient {
                     latestSessionId[0] = data.getOutput().getSessionId();
                     System.out.println("Received text: " + text);
                     if (!text.isEmpty()) {
-                        processText(text, latestSessionId[0]);
+                        processText(text, latestSessionId[0]); // 不需要传递priority
                     }
                 });
 
                 // 处理可能剩余在缓冲区的文本
                 if (textBuffer.length() > 0) {
-                    processSentence(textBuffer.toString(), latestSessionId[0]);
+                    processSentence(textBuffer.toString(), latestSessionId[0], priority);
                     textBuffer.setLength(0);
                 }
 
@@ -281,8 +284,9 @@ public class LLmDashClient {
 
         while (matcher.find()) {
             String sentence = textBuffer.substring(lastIndex, matcher.end());
-            processSentence(sentence, sessionId);
+            processSentence(sentence, sessionId, priority); // 传递当前的priority值
             lastIndex = matcher.end();
+            priority--; // 修改类级别的priority变量
         }
 
         // 移除已处理的文本
@@ -291,8 +295,9 @@ public class LLmDashClient {
         }
     }
 
-    private void processSentence(String sentence, String sessionId) {
+    private void processSentence(String sentence, String sessionId, int priority) {
         SpeechSynthesisRequest request = new SpeechSynthesisRequest(sentence, xmlySpeechConfig);
+        request.setPriority(priority); // 使用传入的priority值
         SpeechSynthesisResponse response = speechSynthesisService.initiateSpeechSynthesis(request);
         if (response.isSuccess() && response.getData() != null) {
             taskQueue.offer(new SpeechTask(response.getData().getRequestId(), sessionId));
@@ -316,6 +321,7 @@ public class LLmDashClient {
                             .fetchSpeechSynthesisResult(task.getRequestId());
                     if (result != null) {
                         if (result.getCode() == 201003) {
+                            System.out.println("result:" + result.getMessage());
                             // 异步合成已完成
                             DashLlmVoiceResponseDTO responseDTO = new DashLlmVoiceResponseDTO();
                             responseDTO.setContent(result.getData().getAudio());

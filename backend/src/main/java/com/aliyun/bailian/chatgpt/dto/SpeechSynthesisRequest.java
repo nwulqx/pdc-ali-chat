@@ -19,6 +19,7 @@ public class SpeechSynthesisRequest {
     private double pitch;
     @JsonProperty("result_audio_type")
     private String resultAudioType = "base64";
+    private int priority = 1000;
 
     @Data
     public static class Speaker {
