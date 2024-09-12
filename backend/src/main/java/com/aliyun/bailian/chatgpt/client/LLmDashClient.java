@@ -213,24 +213,27 @@ public class LLmDashClient {
 
     public SseEmitter streamSpeechWithXMLY(String prompt, String sessionId) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
-        AtomicBoolean isCompleted = new AtomicBoolean(false);
+        AtomicBoolean isTextCompleted = new AtomicBoolean(false);
+        AtomicBoolean isEmitterClosed = new AtomicBoolean(false);
 
         ApplicationParam param = buildApplicationParam(prompt, sessionId);
 
         // 启动结果处理线程
-        resultProcessorExecutor.submit(() -> pollResults(emitter, sessionId, isCompleted));
+        CompletableFuture<Void> pollResultsFuture = CompletableFuture.runAsync(
+                () -> pollResults(emitter, sessionId, isTextCompleted, isEmitterClosed),
+                resultProcessorExecutor);
 
         // 启动文本处理线程
-        textProcessorExecutor.submit(() -> {
+        CompletableFuture<Void> textProcessingFuture = CompletableFuture.runAsync(() -> {
             try {
                 Application application = new Application();
                 Flowable<ApplicationResult> resultStream = application.streamCall(param);
 
-                String[] latestSessionId = { sessionId }; // 使用数组来存储最新的 sessionId
+                String[] latestSessionId = { sessionId };
 
                 resultStream.blockingForEach(data -> {
                     String text = data.getOutput().getText();
-                    latestSessionId[0] = data.getOutput().getSessionId(); // 更新最新的 sessionId
+                    latestSessionId[0] = data.getOutput().getSessionId();
                     System.out.println("Received text: " + text);
                     if (!text.isEmpty()) {
                         processText(text, latestSessionId[0]);
@@ -243,13 +246,30 @@ public class LLmDashClient {
                     textBuffer.setLength(0);
                 }
 
-                isCompleted.set(true);
+                isTextCompleted.set(true);
             } catch (Exception e) {
                 System.err.println("Error in text processing: " + e.getMessage());
-                isCompleted.set(true);
-                emitter.completeWithError(e);
+                isTextCompleted.set(true);
+                if (!isEmitterClosed.get()) {
+                    emitter.completeWithError(e);
+                    isEmitterClosed.set(true);
+                }
             }
-        });
+        }, textProcessorExecutor);
+
+        // 等待两个任务都完成
+        CompletableFuture.allOf(pollResultsFuture, textProcessingFuture)
+                .whenComplete((result, throwable) -> {
+                    if (!isEmitterClosed.get()) {
+                        try {
+                            emitter.complete();
+                        } catch (IllegalStateException e) {
+                            System.out.println("Emitter already completed");
+                        } finally {
+                            isEmitterClosed.set(true);
+                        }
+                    }
+                });
 
         return emitter;
     }
@@ -281,47 +301,66 @@ public class LLmDashClient {
         }
     }
 
-    private void pollResults(SseEmitter emitter, String sessionId, AtomicBoolean isCompleted) {
+    private void pollResults(SseEmitter emitter, String sessionId, AtomicBoolean isTextCompleted,
+            AtomicBoolean isEmitterClosed) {
         System.out.println("Starting pollResults for sessionId: " + sessionId);
-        while (!isCompleted.get() || !taskQueue.isEmpty()) {
+        while (!isTextCompleted.get() || !taskQueue.isEmpty()) {
+            if (isEmitterClosed.get()) {
+                System.out.println("Emitter closed, stopping pollResults");
+                break;
+            }
             try {
-                SpeechTask task = taskQueue.peek(); // 只查看队列头部元素,不移除
+                SpeechTask task = taskQueue.peek();
                 if (task != null) {
                     SpeechSynthesisResultDTO result = speechSynthesisService
                             .fetchSpeechSynthesisResult(task.getRequestId());
                     if (result != null) {
                         if (result.getCode() == 201003) {
+                            // 异步合成已完成
                             DashLlmVoiceResponseDTO responseDTO = new DashLlmVoiceResponseDTO();
                             responseDTO.setContent(result.getData().getAudio());
                             responseDTO.setSessionId(task.getSessionId());
                             responseDTO.setContentType("audio");
                             responseDTO.setRequestId(task.getRequestId());
 
-                            emitter.send(SseEmitter.event().data(Result.success(responseDTO)));
-                            System.out.println("Sent audio result for requestId: " + task.getRequestId());
-
-                            taskQueue.poll(); // 只有在成功处理后才移除任务
-                        } else {
+                            try {
+                                emitter.send(SseEmitter.event().data(Result.success(responseDTO)));
+                                System.out.println("Sent audio result for requestId: " + task.getRequestId());
+                                taskQueue.poll();
+                            } catch (IllegalStateException e) {
+                                System.out.println("SseEmitter已完成，停止发送数据");
+                                isEmitterClosed.set(true);
+                                break;
+                            }
+                        } else if (result.getCode() == 201001 || result.getCode() == 201002) {
+                            // 异步合成已提交或处理中，继续等待
                             System.out.println("Result not ready, code: " + result.getCode() + " for requestId: "
                                     + task.getRequestId());
-                            // 结果未准备好,不做任何操作,保持任务在队列中
+                        } else {
+                            // 其他错误码，移除任务并记录错误
+                            System.err.println("Error in speech synthesis, code: " + result.getCode()
+                                    + " for requestId: " + task.getRequestId());
+                            taskQueue.poll();
                         }
                     } else {
                         System.out.println("No result for requestId: " + task.getRequestId());
-                        // 没有结果,不做任何操作,保持任务在队列中
                     }
                 }
-                Thread.sleep(1000); // 每1000ms检查一次
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("pollResults interrupted for sessionId: " + sessionId);
                 break;
             } catch (Exception e) {
                 System.err.println("Error in pollResults for sessionId " + sessionId + ": " + e.getMessage());
+                if (e instanceof IllegalStateException) {
+                    System.out.println("SseEmitter已完成，停止发送数据");
+                    isEmitterClosed.set(true);
+                    break;
+                }
             }
         }
         System.out.println("pollResults finished for sessionId: " + sessionId);
-        emitter.complete();
     }
 
     private static class SpeechTask {
