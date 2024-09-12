@@ -10,7 +10,7 @@ public class SpeechSynthesisRequest {
     private String lang = "zh-cn";
     private boolean ssml = false;
     private Speaker speaker;
-    private int sr = 24000;
+    private int sr = 16000;
     @JsonProperty("audio_format")
     private String audioFormat = "mp3";
     private String br = "64k";

@@ -33,11 +33,10 @@ public class LlmDashSseController {
     }
 
     // 提供文本+语音流 SSE 服务
-    // @PostMapping("/v1/stream-text-and-speech")
-    // public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request)
-    // {
-    // String prompt = request.getPrompt();
-    // String sessionId = request.getSessionId();
-    // return llmDashClient.streamTextAndSpeech(prompt, sessionId);
-    // }
+    @PostMapping("/v1/stream-speech-cosy")
+    public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request) {
+        String prompt = request.getPrompt();
+        String sessionId = request.getSessionId();
+        return llmDashClient.streamSpeechWithFlowCosyVoice(prompt, sessionId);
+    }
 }

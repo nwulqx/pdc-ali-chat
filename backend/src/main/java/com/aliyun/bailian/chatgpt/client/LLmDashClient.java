@@ -3,6 +3,11 @@ package com.aliyun.bailian.chatgpt.client;
 import com.alibaba.dashscope.app.Application;
 import com.alibaba.dashscope.app.ApplicationParam;
 import com.alibaba.dashscope.app.ApplicationResult;
+import com.alibaba.dashscope.audio.tts.SpeechSynthesisResult;
+import com.alibaba.dashscope.common.ResultCallback;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
+import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesizer;
 import com.aliyun.bailian.chatgpt.config.LlmDashConfig;
 import com.aliyun.bailian.chatgpt.config.XMLYSpeechConfig;
 import com.aliyun.bailian.chatgpt.dto.DashLlmResponseDTO;
@@ -21,6 +26,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Base64;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -45,8 +52,8 @@ public class LLmDashClient {
     private final ExecutorService resultProcessorExecutor = Executors.newSingleThreadExecutor();
     private final BlockingQueue<SpeechTask> taskQueue = new LinkedBlockingQueue<>();
 
-    private final StringBuilder textBuffer = new StringBuilder();
-    private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；]");
+    private StringBuilder textBuffer = new StringBuilder();
+    private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；，,]");
     private int priority = 1000;
 
     // 提取 ApplicationParam 的构建逻辑，减少重复
@@ -63,14 +70,14 @@ public class LLmDashClient {
     }
 
     // 提取 SpeechSynthesisParam 的构建逻辑，减少重复
-    // private SpeechSynthesisParam buildSpeechSynthesisParam() {
-    // return SpeechSynthesisParam.builder()
-    // .apiKey(llmDashConfig.apikey())
-    // .model(llmDashConfig.voiceModel())
-    // .voice(llmDashConfig.voice())
-    // .format(SpeechSynthesisAudioFormat.WAV_22050HZ_MONO_16BIT)
-    // .build();
-    // }
+    private SpeechSynthesisParam buildSpeechSynthesisParam() {
+        return SpeechSynthesisParam.builder()
+                .apiKey(llmDashConfig.apikey())
+                .model(llmDashConfig.voiceModel())
+                .voice(llmDashConfig.voice())
+                .format(SpeechSynthesisAudioFormat.MP3_22050HZ_MONO_256KBPS)
+                .build();
+    }
 
     // 封装映射数据的方法
     private DashLlmResponseDTO buildResponseDTO(ApplicationResult data) {
@@ -352,7 +359,7 @@ public class LLmDashClient {
                         System.out.println("No result for requestId: " + task.getRequestId());
                     }
                 }
-                Thread.sleep(1000);
+                Thread.sleep(2250);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("pollResults interrupted for sessionId: " + sessionId);
@@ -396,5 +403,235 @@ public class LLmDashClient {
             textProcessorExecutor.shutdownNow();
             resultProcessorExecutor.shutdownNow();
         }
+    }
+
+    // 封装语音流 SSE 推送
+    public SseEmitter streamSpeechWithFlowCosyVoice(String prompt, String sessionId) {
+        SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
+        ApplicationParam param = buildApplicationParam(prompt, sessionId);
+        SpeechSynthesisParam speechParam = buildSpeechSynthesisParam();
+        SpeechSynthesizer synthesizer = new SpeechSynthesizer(speechParam, null);
+        String[] latestSessionId = { sessionId };
+
+        try {
+            Application application = new Application();
+            Flowable<ApplicationResult> resultStream = application.streamCall(param);
+            textBuffer = new StringBuilder();
+
+            resultStream.subscribe(
+                data -> handleTextSegment(data, emitter, synthesizer, latestSessionId),
+                e -> handleSseError(emitter, (Exception) e),
+                () -> completeEmitter(emitter)
+            );
+
+            handleRemainingText(emitter, synthesizer, latestSessionId);
+        } catch (Exception e) {
+            handleSseError(emitter, e);
+        }
+
+        return emitter;
+    }
+
+    private void handleTextSegment(ApplicationResult data, SseEmitter emitter, 
+                                  SpeechSynthesizer synthesizer, String[] latestSessionId) {
+        String text = data.getOutput().getText();
+        if (text.isEmpty()) {
+            emitter.complete();
+            return;
+        }
+
+        textBuffer.append(text);
+        int lastIndex = 0;
+        Matcher matcher = SENTENCE_END_PATTERN.matcher(textBuffer);
+
+        while (matcher.find()) {
+            String sentence = textBuffer.substring(lastIndex, matcher.end());
+            String requestId = data.getRequestId();
+            String responseSessionId = data.getOutput().getSessionId();
+            latestSessionId[0] = responseSessionId;
+
+            processSentence(sentence, requestId, responseSessionId, emitter, synthesizer);
+            lastIndex = matcher.end();
+        }
+
+        removeProcessedText(lastIndex);
+    }
+
+    private void processSentence(String sentence, String requestId, String responseSessionId, 
+                                SseEmitter emitter, SpeechSynthesizer synthesizer) {
+        System.out.println("Generated text segment: " + sentence);
+        ByteBuffer audio = synthesizer.call(sentence);
+        if (audio != null) {
+            sendAudioResponse(audio, requestId, responseSessionId, emitter);
+        }
+    }
+
+    private void sendAudioResponse(ByteBuffer audio, String requestId, String responseSessionId, SseEmitter emitter) {
+        try {
+            System.out.println("result" + audio);
+            String audioBase64 = Base64.getEncoder().encodeToString(audio.array());
+
+            DashLlmVoiceResponseDTO voiceResponseDTO = new DashLlmVoiceResponseDTO();
+            voiceResponseDTO.setContent(audioBase64);
+            voiceResponseDTO.setSessionId(responseSessionId);
+            voiceResponseDTO.setRequestId(requestId);
+            voiceResponseDTO.setContentType("audio/hex");
+
+            emitter.send(SseEmitter.event().data(Result.success(voiceResponseDTO)));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    private void removeProcessedText(int lastIndex) {
+        if (lastIndex > 0) {
+            textBuffer.delete(0, lastIndex);
+        }
+    }
+
+    private void handleRemainingText(SseEmitter emitter, SpeechSynthesizer synthesizer, String[] latestSessionId) {
+        if (textBuffer.length() > 0) {
+            String sentence = textBuffer.toString();
+            ByteBuffer audio = synthesizer.call(sentence);
+            if (audio != null) {
+                sendAudioResponse(audio, null, latestSessionId[0], emitter);
+            }
+        }
+    }
+
+    private void completeEmitter(SseEmitter emitter) {
+        try {
+            emitter.complete();
+        } catch (Exception e) {
+            // Log the exception
+            System.err.println("Error completing emitter: " + e.getMessage());
+        }
+    }
+
+    // 处理每个文本片段并推送生成的语音片段
+    private void processAndSendSpeechSegment(SpeechSynthesizer synthesizer, String textSegment, SseEmitter emitter) {
+        try {
+            ByteBuffer b = synthesizer.call(textSegment); // 合成音频片段
+            System.out.print("ByteBuffer"+b);
+        } catch (Exception e) {
+            handleSseError(emitter, e);
+        }
+    }
+
+    // 处理 SSE 错误推送
+    private void handleSseError(SseEmitter emitter, Exception e) {
+        try {
+            emitter.send(SseEmitter.event().data(Result.error("500", "Task failed: " + e.getMessage())));
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        emitter.completeWithError(e);
+    }
+
+    // ReactCallback 负责推送语音片段
+    private static class ReactCallback extends ResultCallback<SpeechSynthesisResult> {
+        private final SseEmitter emitter;
+        private String sessionId;
+        private String requestId;
+
+        // 设置当前的 requestId 和 sessionId
+        public void setRequestAndSessionId(String requestId, String sessionId) {
+            this.requestId = requestId;
+            this.sessionId = sessionId;
+        }
+
+        public ReactCallback(SseEmitter emitter, String sessionId) {
+            this.emitter = emitter;
+            this.sessionId = sessionId;
+        }
+
+        @Override
+        public void onEvent(SpeechSynthesisResult result) {
+            if (result.getAudioFrame() != null) {
+                try {
+                    System.out.println("result" + result);
+                    // 将音频数据转换为十六进制字符串
+                    String audioHex = bytesToHex(result.getAudioFrame().array());
+
+                    DashLlmVoiceResponseDTO voiceResponseDTO = new DashLlmVoiceResponseDTO();
+                    voiceResponseDTO.setContent(audioHex);
+                    voiceResponseDTO.setSessionId(this.sessionId);
+                    voiceResponseDTO.setRequestId(this.requestId);
+                    voiceResponseDTO.setContentType("audio/hex");
+
+                    // 推送十六进制音频数据
+                    emitter.send(SseEmitter.event().data(Result.success(voiceResponseDTO)));
+                } catch (IOException e) {
+                    emitter.completeWithError(e);
+                }
+            }
+        }
+
+        @Override
+        public void onComplete() {
+            emitter.complete();
+        }
+
+        @Override
+        public void onError(Exception e) {
+            emitter.completeWithError(e);
+        }
+    }
+
+    // 将字节数组转换为十六进制字符串
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
+    // 封装文本+语音流 SSE 推送
+    public SseEmitter streamTextAndSpeech(String prompt, String sessionId) {
+        SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
+
+        ApplicationParam param = buildApplicationParam(prompt, sessionId);
+
+        // 构建语音合成器参数
+        SpeechSynthesisParam speechParam = buildSpeechSynthesisParam();
+        ReactCallback callback = new ReactCallback(emitter, sessionId);
+        SpeechSynthesizer synthesizer = new SpeechSynthesizer(speechParam, callback);
+
+        try {
+            Application application = new Application();
+            Flowable<ApplicationResult> resultStream = application.streamCall(param);
+
+            // 处理每个生成的文本段
+            resultStream.subscribe(data -> {
+                String textSegment = data.getOutput().getText();
+                String requestId = data.getRequestId(); // 获取 requestId
+                String responseSessionId = data.getOutput().getSessionId(); // 获取 sessionId
+
+                // 生成文本响应并推送给客户端
+                DashLlmResponseDTO responseDTO = buildResponseDTO(data);
+                responseDTO.setContentType("text");
+                emitter.send(SseEmitter.event().data(Result.success(responseDTO))); // 推送文本
+
+                // 更新回调中的 requestId 和 sessionId
+                callback.setRequestAndSessionId(requestId, responseSessionId);
+
+                // 异步生成对应的语音片段并推送到客户端
+                resultProcessorExecutor.submit(() -> processAndSendSpeechSegment(synthesizer, textSegment, emitter));
+
+            }, e -> {
+                // 处理错误
+                handleSseError(emitter, (Exception) e);
+            }, () -> {
+                // 生成完成
+                synthesizer.streamingComplete();
+                emitter.complete();
+            });
+
+        } catch (Exception e) {
+            handleSseError(emitter, e);
+        }
+
+        return emitter;
     }
 }
