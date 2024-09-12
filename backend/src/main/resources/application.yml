@@ -12,6 +12,19 @@ spring:
 server:
   port: 8080
 
+# 灵积平台 api 适用于新版 sdk，需要在灵积平台添加配置 apikey
+dash:
+  llm:
+    appId:
+    apikey:
+    model: qwen-max
+    topK: 1
+    seed: 1234
+  voice:
+    model: cosyvoice-v1
+    voice: longxiaochun
+
+# 百炼平台 api 适用于旧版 sdk
 chat:
   llm:
     #[需修改]阿里云accessKeyId, 参考文档https://help.aliyun.com/document_detail/2587494.html?spm=a2c4g.2587492.0.0.2fe9630b3xtcS8

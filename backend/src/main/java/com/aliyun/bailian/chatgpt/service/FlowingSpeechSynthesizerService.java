@@ -40,7 +40,7 @@ public class FlowingSpeechSynthesizerService {
             NlsClient nlsClient = tokenService.getNlsClient();
             synthesizer = new FlowingSpeechSynthesizer(nlsClient, listener);
             synthesizer.setAppKey(appKey);
-            synthesizer.setFormat(OutputFormatEnum.WAV);
+            synthesizer.setFormat(OutputFormatEnum.MP3);
             synthesizer.setSampleRate(SampleRateEnum.SAMPLE_RATE_16K);
             synthesizer.setVoice(speechVoice);
             synthesizer.setVolume(speechVolume); // 朗读音量，范围是0~100，默认50。
