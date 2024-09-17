@@ -12,7 +12,7 @@ spring:
 server:
   port: 8080
 
-# 灵积平台 api 适用于新版 sdk，需要在灵积平台添加配置 apikey
+# 灵积平台 api 适用于新版 sdk
 dash:
   llm:
     appId:
@@ -56,7 +56,8 @@ chat:
   security:
     refererWhitelist:
       - http://127.0.0.1:8080
-      - https://116.62.237.87
+      - https://ai.forsize.cn/
+      - https://121.43.108.153/
   app:
     openTrace: true
     sessionMaxMessages: 50 #对话记录, 最多50条
@@ -70,21 +71,23 @@ chat:
 #  port: 6379
 #  password:
 aliyun:
-  appKey: 242HzDFWvNCJJxAl
-  url: wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1
+  appKey:
+  url: wss://nls-gateway-cn-beijing.aliyuncs.com/ws/v1
 
+# cosyvoice 智能语音平台（非 dash）
 TTSFlowing:
-  speechVoice: siyue
+  speechVoice:
   speechVolume: 50
   speechPitchRate: 0
   speechRate: 0
   minSendIntervalMS: 100
+  uploadAudioDir: ./uploadAudio
 
 pdc:
-  tts: http://47.97.217.55:8080
+  tts: http://121.199.64.87:8000
 
 xmly:
-  authToken:
+  authToken: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDEyNTc0ODcsImlhdCI6MTcyNTcwNTQ4Nywic3ViIjoiYmFvc2hpamllIn0.PdeRyDc5lAS_3WziGRbem7mS5lyhDU3js5zZmOqkKhk
   rate: 55.0
   volume: 50.0
   pitch: 60.0

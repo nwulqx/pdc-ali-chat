@@ -133,7 +133,7 @@ public class LLmDashClient {
     }
 
     // 封装语音流 SSE 推送
-    public SseEmitter streamSpeech(String prompt, String sessionId) {
+    public SseEmitter streamSpeech(String prompt, String sessionId, String VoiceName) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
         AtomicBoolean isCompleted = new AtomicBoolean(false);
 
@@ -165,7 +165,7 @@ public class LLmDashClient {
 
                         while (matcher.find()) {
                             String sentence = textBuffer.substring(lastIndex, matcher.end());
-                            processSentenceForSpeech(sentence, latestSessionId[0], emitter);
+                            processSentenceForSpeech(sentence, latestSessionId[0], emitter, VoiceName);
                             lastIndex = matcher.end();
                         }
 
@@ -178,7 +178,7 @@ public class LLmDashClient {
 
                 // 处理可能剩余在缓冲区的文本
                 if (textBuffer.length() > 0) {
-                    processSentenceForSpeech(textBuffer.toString(), latestSessionId[0], emitter);
+                    processSentenceForSpeech(textBuffer.toString(), latestSessionId[0], emitter, VoiceName);
                 }
 
                 isCompleted.set(true);
@@ -192,9 +192,9 @@ public class LLmDashClient {
         return emitter;
     }
 
-    private void processSentenceForSpeech(String sentence, String sessionId, SseEmitter emitter) {
+    private void processSentenceForSpeech(String sentence, String sessionId, SseEmitter emitter, String VoiceName) {
         try {
-            String audioBase64 = flowingSpeechSynthesizerService.synthesize(sentence);
+            String audioBase64 = flowingSpeechSynthesizerService.synthesize(sentence, VoiceName);
 
             DashLlmVoiceResponseDTO responseDTO = new DashLlmVoiceResponseDTO();
             responseDTO.setContent(audioBase64);
@@ -419,10 +419,9 @@ public class LLmDashClient {
             textBuffer = new StringBuilder();
 
             resultStream.subscribe(
-                data -> handleTextSegment(data, emitter, synthesizer, latestSessionId),
-                e -> handleSseError(emitter, (Exception) e),
-                () -> completeEmitter(emitter)
-            );
+                    data -> handleTextSegment(data, emitter, synthesizer, latestSessionId),
+                    e -> handleSseError(emitter, (Exception) e),
+                    () -> completeEmitter(emitter));
 
             handleRemainingText(emitter, synthesizer, latestSessionId);
         } catch (Exception e) {
@@ -432,8 +431,8 @@ public class LLmDashClient {
         return emitter;
     }
 
-    private void handleTextSegment(ApplicationResult data, SseEmitter emitter, 
-                                  SpeechSynthesizer synthesizer, String[] latestSessionId) {
+    private void handleTextSegment(ApplicationResult data, SseEmitter emitter,
+            SpeechSynthesizer synthesizer, String[] latestSessionId) {
         String text = data.getOutput().getText();
         if (text.isEmpty()) {
             emitter.complete();
@@ -457,8 +456,8 @@ public class LLmDashClient {
         removeProcessedText(lastIndex);
     }
 
-    private void processSentence(String sentence, String requestId, String responseSessionId, 
-                                SseEmitter emitter, SpeechSynthesizer synthesizer) {
+    private void processSentence(String sentence, String requestId, String responseSessionId,
+            SseEmitter emitter, SpeechSynthesizer synthesizer) {
         System.out.println("Generated text segment: " + sentence);
         ByteBuffer audio = synthesizer.call(sentence);
         if (audio != null) {
@@ -512,7 +511,7 @@ public class LLmDashClient {
     private void processAndSendSpeechSegment(SpeechSynthesizer synthesizer, String textSegment, SseEmitter emitter) {
         try {
             ByteBuffer b = synthesizer.call(textSegment); // 合成音频片段
-            System.out.print("ByteBuffer"+b);
+            System.out.print("ByteBuffer" + b);
         } catch (Exception e) {
             handleSseError(emitter, e);
         }

@@ -2,7 +2,7 @@ package com.aliyun.bailian.chatgpt.dto;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -24,4 +24,6 @@ public class DashLlmRequestDTO extends RequestBase {
      */
     private String audioSource;
 
+    @JsonProperty("VoiceName")
+    private String voiceName;
 }

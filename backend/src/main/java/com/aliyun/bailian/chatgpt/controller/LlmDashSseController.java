@@ -26,8 +26,9 @@ public class LlmDashSseController {
         String prompt = request.getPrompt();
         String sessionId = request.getSessionId();
         String audioSource = request.getAudioSource();
+        String VoiceName = request.getVoiceName();
         if (audioSource != null && audioSource.equals("alicloud")) {
-            return llmDashClient.streamSpeech(prompt, sessionId);
+            return llmDashClient.streamSpeech(prompt, sessionId, VoiceName);
         }
         return llmDashClient.streamSpeechWithXMLY(prompt, sessionId);
     }
