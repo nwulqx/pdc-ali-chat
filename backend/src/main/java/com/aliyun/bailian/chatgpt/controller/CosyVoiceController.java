@@ -29,12 +29,24 @@ public class CosyVoiceController {
 
     @PostMapping("/v1/cosy-list")
     public ResponseEntity<CosyVoiceListResponseDTO> getCosyList(
-            @RequestBody(required = false) Map<String, String> requestBody) {
-        String voicePrefix = "pdc"; // 默认值
-        if (requestBody != null && requestBody.containsKey("voicePrefix")) {
-            voicePrefix = requestBody.get("voicePrefix");
+            @RequestBody(required = false) Map<String, Object> requestBody) {
+        String voicePrefix = "pdc";
+        Integer pageIndex = 1;
+        Integer pageSize = 10;
+
+        if (requestBody != null) {
+            if (requestBody.containsKey("voicePrefix")) {
+                voicePrefix = (String) requestBody.get("voicePrefix");
+            }
+            if (requestBody.containsKey("pageIndex")) {
+                pageIndex = (Integer) requestBody.get("pageIndex");
+            }
+            if (requestBody.containsKey("pageSize")) {
+                pageSize = (Integer) requestBody.get("pageSize");
+            }
         }
-        CosyVoiceListResponseDTO response = cosyVoiceClient.cosyList(voicePrefix);
+
+        CosyVoiceListResponseDTO response = cosyVoiceClient.cosyList(voicePrefix, pageIndex, pageSize);
         return ResponseEntity.ok(response);
     }
 

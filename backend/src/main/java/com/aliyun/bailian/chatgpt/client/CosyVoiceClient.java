@@ -38,11 +38,11 @@ public class CosyVoiceClient {
         this.client = new DefaultAcsClient(profile);
     }
 
-    public CosyVoiceListResponseDTO cosyList(String voicePrefix) {
+    public CosyVoiceListResponseDTO cosyList(String voicePrefix, Integer pageIndex, Integer pageSize) {
         CommonRequest request = buildRequest("ListCosyVoice");
         request.putBodyParameter("VoicePrefix", voicePrefix);
-        request.putBodyParameter("PageSize", 200);
-        request.putBodyParameter("PageIndex", 1);
+        request.putBodyParameter("PageIndex", pageIndex != null ? pageIndex : 1);
+        request.putBodyParameter("PageSize", pageSize != null ? pageSize : 10);
         String response = sendRequest(request);
         try {
             return objectMapper.readValue(response, CosyVoiceListResponseDTO.class);
