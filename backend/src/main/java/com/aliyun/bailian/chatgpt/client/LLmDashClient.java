@@ -111,6 +111,10 @@ public class LLmDashClient {
                 Flowable<ApplicationResult> resultStream = application.streamCall(param);
 
                 resultStream.blockingForEach(data -> {
+                    if (data.getOutput().getText() == null) {
+                        System.out.println("Received null text, skipping processing");
+                        return; // 跳过这次迭代
+                    }
                     // 调用封装的方法来构建响应 DTO
                     DashLlmResponseDTO responseDTO = buildResponseDTO(data);
                     // 推送封装好的响应对象给客户端
@@ -152,6 +156,10 @@ public class LLmDashClient {
                     String text = data.getOutput().getText();
                     latestSessionId[0] = data.getOutput().getSessionId(); // 更新最新的 sessionId
                     System.out.println("Received text: " + text);
+                    if (text == null) {
+                        System.out.println("Received null text, skipping processing");
+                        return; // 跳过这次迭代
+                    }
                     if (text.isEmpty()) {
                         // 如果接收到空字符串，表示结束，关闭 SSE
                         emitter.complete();
@@ -180,10 +188,11 @@ public class LLmDashClient {
                 if (textBuffer.length() > 0) {
                     processSentenceForSpeech(textBuffer.toString(), latestSessionId[0], emitter, VoiceName);
                 }
-
+                emitter.complete();
                 isCompleted.set(true);
             } catch (Exception e) {
                 System.err.println("Error in text processing: " + e.getMessage());
+                emitter.complete();
                 isCompleted.set(true);
                 emitter.completeWithError(e);
             }
@@ -245,6 +254,10 @@ public class LLmDashClient {
                     String text = data.getOutput().getText();
                     latestSessionId[0] = data.getOutput().getSessionId();
                     System.out.println("Received text: " + text);
+                    if (text == null) {
+                        System.out.println("Received null text, skipping processing");
+                        return; // 跳过这次迭代
+                    }
                     if (!text.isEmpty()) {
                         processText(text, latestSessionId[0]); // 不需要传递priority
                     }
@@ -434,6 +447,10 @@ public class LLmDashClient {
     private void handleTextSegment(ApplicationResult data, SseEmitter emitter,
             SpeechSynthesizer synthesizer, String[] latestSessionId) {
         String text = data.getOutput().getText();
+        if (text == null) {
+            System.out.println("Received null text, skipping processing");
+            return; // 跳过这次迭代
+        }
         if (text.isEmpty()) {
             emitter.complete();
             return;
