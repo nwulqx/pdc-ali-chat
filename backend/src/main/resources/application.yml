@@ -82,9 +82,10 @@ TTSFlowing:
   speechRate: 0
   minSendIntervalMS: 100
   uploadAudioDir: ./uploadAudio
+  baseUrl:
 
 pdc:
-  tts: http://121.199.64.87:8000
+  tts: http://121.199.64.87:8000 # 废弃
 
 xmly:
   authToken: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDEyNTc0ODcsImlhdCI6MTcyNTcwNTQ4Nywic3ViIjoiYmFvc2hpamllIn0.PdeRyDc5lAS_3WziGRbem7mS5lyhDU3js5zZmOqkKhk

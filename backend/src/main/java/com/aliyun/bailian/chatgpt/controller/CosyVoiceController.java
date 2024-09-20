@@ -27,6 +27,9 @@ public class CosyVoiceController {
     @Value("${TTSFlowing.uploadAudioDir:/uploadAudio}")
     private String UPLOAD_DIR;
 
+    @Value("${TTSFlowing.baseUrl:https://121.43.108.153}")
+    private String baseUrl;
+
     @PostMapping("/v1/cosy-list")
     public ResponseEntity<CosyVoiceListResponseDTO> getCosyList(
             @RequestBody(required = false) Map<String, Object> requestBody) {
@@ -85,9 +88,8 @@ public class CosyVoiceController {
             }
 
             // 生成可访问的URL
-            String fileUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                    + "/audio/" + fileName;
-            System.out.println("fileUrl" + fileUrl);
+            String fileUrl = baseUrl + "/audio/" + fileName;
+            System.out.println("fileUrl: " + fileUrl);
 
             // 调用cosyClone方法
             CosyVoiceCloneResponseDTO cloneResponse = cosyVoiceClient.cosyClone(fileUrl, voicePrefix);
