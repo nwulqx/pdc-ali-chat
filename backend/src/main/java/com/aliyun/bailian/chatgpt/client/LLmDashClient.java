@@ -50,7 +50,6 @@ public class LLmDashClient {
 
     private final ExecutorService textProcessorExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService resultProcessorExecutor = Executors.newSingleThreadExecutor();
-    private final BlockingQueue<SpeechTask> taskQueue = new LinkedBlockingQueue<>();
 
     private StringBuilder textBuffer = new StringBuilder();
     private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；，,]");
@@ -232,6 +231,7 @@ public class LLmDashClient {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1小时超时
         AtomicBoolean isTextCompleted = new AtomicBoolean(false);
         AtomicBoolean isEmitterClosed = new AtomicBoolean(false);
+        BlockingQueue<SpeechTask> taskQueue = new LinkedBlockingQueue<>(); // 作为局部变量
 
         priority = 1000; // 在这里初始化priority
 
@@ -239,7 +239,7 @@ public class LLmDashClient {
 
         // 启动结果处理线程
         CompletableFuture<Void> pollResultsFuture = CompletableFuture.runAsync(
-                () -> pollResults(emitter, sessionId, isTextCompleted, isEmitterClosed),
+                () -> pollResults(emitter, sessionId, isTextCompleted, isEmitterClosed, taskQueue),
                 resultProcessorExecutor);
 
         // 启动文本处理线程
@@ -248,6 +248,7 @@ public class LLmDashClient {
                 Application application = new Application();
                 Flowable<ApplicationResult> resultStream = application.streamCall(param);
 
+                StringBuilder textBuffer = new StringBuilder(); // 局部textBuffer
                 String[] latestSessionId = { sessionId };
 
                 resultStream.blockingForEach(data -> {
@@ -259,13 +260,13 @@ public class LLmDashClient {
                         return; // 跳过这次迭代
                     }
                     if (!text.isEmpty()) {
-                        processText(text, latestSessionId[0]); // 不需要传递priority
+                        processText(text, latestSessionId[0], taskQueue, textBuffer);
                     }
                 });
 
                 // 处理可能剩余在缓冲区的文本
                 if (textBuffer.length() > 0) {
-                    processSentence(textBuffer.toString(), latestSessionId[0], priority);
+                    processSentence(textBuffer.toString(), latestSessionId[0], taskQueue, priority);
                     textBuffer.setLength(0);
                 }
 
@@ -297,14 +298,15 @@ public class LLmDashClient {
         return emitter;
     }
 
-    private void processText(String text, String sessionId) {
+    private void processText(String text, String sessionId, BlockingQueue<SpeechTask> taskQueue,
+            StringBuilder textBuffer) {
         textBuffer.append(text);
         int lastIndex = 0;
         java.util.regex.Matcher matcher = SENTENCE_END_PATTERN.matcher(textBuffer);
 
         while (matcher.find()) {
             String sentence = textBuffer.substring(lastIndex, matcher.end());
-            processSentence(sentence, sessionId, priority); // 传递当前的priority值
+            processSentence(sentence, sessionId, taskQueue, priority);
             lastIndex = matcher.end();
             priority--; // 修改类级别的priority变量
         }
@@ -315,9 +317,9 @@ public class LLmDashClient {
         }
     }
 
-    private void processSentence(String sentence, String sessionId, int priority) {
+    private void processSentence(String sentence, String sessionId, BlockingQueue<SpeechTask> taskQueue, int priority) {
         SpeechSynthesisRequest request = new SpeechSynthesisRequest(sentence, xmlySpeechConfig);
-        request.setPriority(priority); // 使用传入的priority值
+        request.setPriority(priority);
         SpeechSynthesisResponse response = speechSynthesisService.initiateSpeechSynthesis(request);
         if (response.isSuccess() && response.getData() != null) {
             taskQueue.offer(new SpeechTask(response.getData().getRequestId(), sessionId));
@@ -327,7 +329,7 @@ public class LLmDashClient {
     }
 
     private void pollResults(SseEmitter emitter, String sessionId, AtomicBoolean isTextCompleted,
-            AtomicBoolean isEmitterClosed) {
+            AtomicBoolean isEmitterClosed, BlockingQueue<SpeechTask> taskQueue) {
         System.out.println("Starting pollResults for sessionId: " + sessionId);
         while (!isTextCompleted.get() || !taskQueue.isEmpty()) {
             if (isEmitterClosed.get()) {
