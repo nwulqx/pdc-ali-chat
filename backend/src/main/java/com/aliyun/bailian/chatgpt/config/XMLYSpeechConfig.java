@@ -29,4 +29,7 @@ public class XMLYSpeechConfig {
     @Setter
     @Getter
     private String speakerVariant;
+    @Setter
+    @Getter
+    private int sr;
 }

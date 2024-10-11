@@ -95,3 +95,4 @@ xmly:
   domain: 播客
   speakerName: 保时捷音色克隆测试V1Pro
   speakerVariant: 自然聊天
+  sr: 24000 # 默认 24000，16000会导致音频音色错误
