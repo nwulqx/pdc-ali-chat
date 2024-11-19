@@ -1,6 +1,5 @@
-package com.aliyun.bailian.chatgpt.security;
+package com.aliyun.bailian.chatgpt.config;
 
-import com.aliyun.bailian.chatgpt.config.SecurityConfig;
 import com.aliyun.bailian.chatgpt.utils.LogUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;

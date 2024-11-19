@@ -1,9 +1,10 @@
 package com.aliyun.bailian.chatgpt.config;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+@Data
 @Configuration
 public class AliyunConfig {
 
@@ -18,20 +19,5 @@ public class AliyunConfig {
 
     @Value("${aliyun.url}")
     private String url;
-
-    @Bean
-    public String appKey() {
-        return appKey;
-    }
-
-    @Bean
-    public String accessKeyId() {
-        return accessKeyId;
-    }
-
-    @Bean
-    public String accessKeySecret() {
-        return accessKeySecret;
-    }
 
 }

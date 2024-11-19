@@ -1,4 +1,4 @@
-package com.aliyun.bailian.chatgpt.service;
+package com.aliyun.bailian.chatgpt.service.impl;
 
 import com.alibaba.nls.client.protocol.InputFormatEnum;
 import com.alibaba.nls.client.protocol.NlsClient;
@@ -6,6 +6,7 @@ import com.alibaba.nls.client.protocol.SampleRateEnum;
 import com.alibaba.nls.client.protocol.asr.SpeechRecognizer;
 import com.alibaba.nls.client.protocol.asr.SpeechRecognizerListener;
 import com.alibaba.nls.client.protocol.asr.SpeechRecognizerResponse;
+import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

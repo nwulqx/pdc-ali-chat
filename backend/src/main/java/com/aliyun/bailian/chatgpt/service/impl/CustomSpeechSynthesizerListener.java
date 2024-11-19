@@ -1,4 +1,4 @@
-package com.aliyun.bailian.chatgpt.service;
+package com.aliyun.bailian.chatgpt.service.impl;
 import com.alibaba.nls.client.protocol.tts.FlowingSpeechSynthesizerListener;
 import com.alibaba.nls.client.protocol.tts.FlowingSpeechSynthesizerResponse;
 import lombok.Setter;

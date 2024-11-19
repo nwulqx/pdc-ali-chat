@@ -1,4 +1,4 @@
-package com.aliyun.bailian.chatgpt.service;
+package com.aliyun.bailian.chatgpt.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

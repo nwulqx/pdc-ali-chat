@@ -1,4 +1,4 @@
-package com.aliyun.bailian.chatgpt.service;
+package com.aliyun.bailian.chatgpt.service.impl;
 
 import com.aliyun.bailian.chatgpt.config.XMLYSpeechConfig;
 import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisRequest;

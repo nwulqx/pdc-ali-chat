@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.Setter;
 
-@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class CosyVoiceCloneResponseDTO {

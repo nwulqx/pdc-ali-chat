@@ -1,4 +1,4 @@
-package com.aliyun.bailian.chatgpt.service;
+package com.aliyun.bailian.chatgpt.service.impl;
 
 import com.alibaba.nls.client.protocol.NlsClient;
 import com.alibaba.nls.client.protocol.OutputFormatEnum;

@@ -1,6 +1,6 @@
 package com.aliyun.bailian.chatgpt.controller;
 
-import com.aliyun.bailian.chatgpt.service.TtsService;
+import com.aliyun.bailian.chatgpt.service.impl.TtsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

@@ -1,9 +1,10 @@
 package com.aliyun.bailian.chatgpt.config;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+@Data
 @Configuration
 public class LlmDashConfig {
     @Value("${dash.llm.model}")
@@ -26,37 +27,5 @@ public class LlmDashConfig {
 
     @Value("${dash.voice.voice}")
     private String voice;
-
-    @Bean
-    public String appId() {
-        return appId;
-    }
-    @Bean
-    public String llmModel() {
-        return llmModel;
-    }
-    @Bean
-    public String apikey() {
-        return apikey;
-    }
-
-    @Bean
-    public Integer seed() {
-        return seed;
-    }
-
-    @Bean
-    public Integer topK() {
-        return topK;
-    }
-    @Bean
-    public String voiceModel() {
-        return voiceModel;
-    }
-
-    @Bean
-    public String voice() {
-        return voice;
-    }
 
 }

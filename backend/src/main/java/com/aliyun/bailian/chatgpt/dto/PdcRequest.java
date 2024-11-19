@@ -1,13 +1,8 @@
 package com.aliyun.bailian.chatgpt.dto;
 
+import lombok.Data;
+
+@Data
 public class PdcRequest {
     private String input;
-
-    public String getInput() {
-        return input;
-    }
-
-    public void setInput(String input) {
-        this.input = input;
-    }
 }
