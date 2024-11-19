@@ -58,11 +58,11 @@ public class LLmDashClient {
     // 提取 ApplicationParam 的构建逻辑，减少重复
     private ApplicationParam buildApplicationParam(String prompt, String sessionId) {
         return ApplicationParam.builder()
-                .appId(llmDashConfig.appId())
-                .apiKey(llmDashConfig.apikey())
+                .appId(llmDashConfig.getAppId())
+                .apiKey(llmDashConfig.getApikey())
                 .prompt(prompt)
-                .topK(llmDashConfig.topK())
-                .seed(llmDashConfig.seed())
+                .topK(llmDashConfig.getTopK())
+                .seed(llmDashConfig.getSeed())
                 .incrementalOutput(true)
                 .sessionId(sessionId) // 使用 sessionId 维护会话
                 .build();
@@ -71,9 +71,9 @@ public class LLmDashClient {
     // 提取 SpeechSynthesisParam 的构建逻辑，减少重复
     private SpeechSynthesisParam buildSpeechSynthesisParam() {
         return SpeechSynthesisParam.builder()
-                .apiKey(llmDashConfig.apikey())
-                .model(llmDashConfig.voiceModel())
-                .voice(llmDashConfig.voice())
+                .apiKey(llmDashConfig.getApikey())
+                .model(llmDashConfig.getVoiceModel())
+                .voice(llmDashConfig.getVoice())
                 .format(SpeechSynthesisAudioFormat.MP3_22050HZ_MONO_256KBPS)
                 .build();
     }
