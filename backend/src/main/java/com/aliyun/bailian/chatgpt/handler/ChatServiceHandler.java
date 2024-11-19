@@ -2,7 +2,7 @@ package com.aliyun.bailian.chatgpt.handler;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONValidator;
-import com.aliyun.bailian.chatgpt.client.BailianLlmClient;
+import com.aliyun.bailian.chatgpt.client.BaiLianLlmClient;
 import com.aliyun.bailian.chatgpt.dto.CompletionRequestDTO;
 import com.aliyun.bailian.chatgpt.dto.CompletionResponseDTO;
 import com.aliyun.bailian.chatgpt.dto.Result;
@@ -29,7 +29,7 @@ import java.util.*;
 public class ChatServiceHandler {
     private final ChatSessionService chatSessionService;
 
-    private final BailianLlmClient llmClient;
+    private final BaiLianLlmClient llmClient;
 
     private CompletionRequestDTO request;
 
@@ -39,7 +39,7 @@ public class ChatServiceHandler {
 
     private boolean success;
 
-    public ChatServiceHandler(ChatSessionService chatSessionService, BailianLlmClient llmClient) {
+    public ChatServiceHandler(ChatSessionService chatSessionService, BaiLianLlmClient llmClient) {
         this.chatSessionService = chatSessionService;
         this.llmClient = llmClient;
     }

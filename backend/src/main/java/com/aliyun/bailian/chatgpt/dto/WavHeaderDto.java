@@ -1,9 +1,9 @@
-package com.aliyun.bailian.chatgpt.controller;
+package com.aliyun.bailian.chatgpt.dto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class WavHeader {
+public class WavHeaderDto {
     public int fileLength;
     public int fmtHdrLeth;
     public short bitsPerSample;

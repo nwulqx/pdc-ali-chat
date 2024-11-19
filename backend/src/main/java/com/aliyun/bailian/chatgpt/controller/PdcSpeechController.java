@@ -12,17 +12,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/pdc/tts")
 public class PdcSpeechController {
 
-    @Autowired
-    private PdcSpeechService pdcSpeechService;
+  @Autowired
+  private PdcSpeechService pdcSpeechService;
 
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> synthesize(@RequestBody PdcRequest request) {
-        byte[] audioData = pdcSpeechService.synthesizeSpeech(request, MediaType.APPLICATION_JSON_VALUE);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentLength(audioData.length);
-        return ResponseEntity.ok().headers(headers).body(audioData);
-    }
+  @PostMapping(value = "/synthesize", consumes = MediaType.APPLICATION_JSON_VALUE, produces =
+      MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<byte[]> synthesize(@RequestBody PdcRequest request) {
+    byte[] audioData = pdcSpeechService.synthesizeSpeech(request, MediaType.APPLICATION_JSON_VALUE);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentLength(audioData.length);
+    return ResponseEntity.ok().headers(headers).body(audioData);
+  }
 }

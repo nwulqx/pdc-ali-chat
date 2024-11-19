@@ -6,16 +6,15 @@ import com.aliyun.bailian.chatgpt.dto.CompletionRequestDTO;
 import com.aliyun.bailian.chatgpt.enums.ChatTypeEnum;
 import com.aliyun.broadscope.bailian.sdk.AccessTokenClient;
 import com.aliyun.broadscope.bailian.sdk.ApplicationClient;
-import com.aliyun.broadscope.bailian.sdk.consts.ConfigConsts;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsRequest;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsResponse;
 import com.aliyun.broadscope.bailian.sdk.models.ConnectOptions;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,34 +27,38 @@ import java.util.stream.Collectors;
  */
 
 @Component
-public class BailianLlmClient {
+public class BaiLianLlmClient {
 
     @Resource
     private LlmConfig llmConfig;
 
-    private AccessTokenClient accessTokenClient;
-
-    private String endpoint;
-
-    @PostConstruct
-    public void init() {
+    @Bean
+    public AccessTokenClient accessTokenClient() {
         String accessKeyId = llmConfig.getAccessKeyId();
         String accessKeySecret = llmConfig.getAccessKeySecret();
         String agentKey = llmConfig.getAgentKey();
 
-        accessTokenClient = new AccessTokenClient(accessKeyId, accessKeySecret, agentKey);
+        AccessTokenClient accessTokenClient = new AccessTokenClient(accessKeyId, accessKeySecret, agentKey);
         String popEndpoint = llmConfig.getPopEndpoint();
         if (StringUtils.isNotBlank(popEndpoint)) {
             accessTokenClient.setEndpoint(popEndpoint);
         }
-
-        String endpoint = llmConfig.getEndpoint();
-        if (StringUtils.isNotBlank(endpoint)) {
-            this.endpoint = endpoint;
-        } else {
-            this.endpoint = ConfigConsts.ENDPOINT;
-        }
+        return accessTokenClient;
     }
+
+
+    @Bean
+    public ApplicationClient applicationClient() {
+        String token = accessTokenClient().getToken();
+        int timeout = llmConfig.getTimeout() * 1000;
+
+        return ApplicationClient.builder()
+                .endpoint(llmConfig.getEndpoint())
+                .token(token)
+                .connectOptions(new ConnectOptions(timeout, timeout, timeout))
+                .build();
+    }
+
 
     /**
      * 调用大模型服务，并进行流式结果响应
@@ -64,15 +67,6 @@ public class BailianLlmClient {
      * @return 流式响应结果
      */
     public Flux<CompletionsResponse> createStreamCompletion(CompletionRequestDTO completionRequest) {
-        String token = accessTokenClient.getToken();
-        int timeout = llmConfig.getTimeout() * 1000;
-
-        ApplicationClient client = ApplicationClient.builder()
-                .endpoint(endpoint)
-                .token(token)
-                .connectOptions(new ConnectOptions(timeout, timeout, timeout))
-                .build();
-
         String requestId = completionRequest.getRequestId();
         String prompt = completionRequest.getContent();
         CompletionsRequest request = new CompletionsRequest()
@@ -104,6 +98,6 @@ public class BailianLlmClient {
         param.setTopK(llmConfig.getTopK());
 
         request.setParameters(param);
-        return client.streamCompletions(request);
+        return applicationClient().streamCompletions(request);
     }
 }

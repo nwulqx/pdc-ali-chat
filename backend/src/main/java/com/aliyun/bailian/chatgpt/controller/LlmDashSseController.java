@@ -9,35 +9,31 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RestController
 public class LlmDashSseController {
 
-    @Autowired
-    private LLmDashClient llmDashClient;
+  @Autowired
+  private LLmDashClient llmDashClient;
 
-    // 提供文本流 SSE 服务
-    @PostMapping("/v1/stream-text")
-    public SseEmitter streamText(@RequestBody DashLlmRequestDTO request) {
-        String prompt = request.getPrompt();
-        String sessionId = request.getSessionId();
-        return llmDashClient.streamText(prompt, sessionId);
-    }
+  // 提供文本流 SSE 服务
+  @PostMapping("/v1/stream-text")
+  public SseEmitter streamText(@RequestBody DashLlmRequestDTO request) {
+    return llmDashClient.streamText(request.getPrompt(), request.getSessionId());
+  }
 
-    // 提供语音流 SSE 服务
-    @PostMapping("/v1/stream-speech")
-    public SseEmitter streamSpeech(@RequestBody DashLlmRequestDTO request) {
-        String prompt = request.getPrompt();
-        String sessionId = request.getSessionId();
-        String audioSource = request.getAudioSource();
-        String VoiceName = request.getVoiceName();
-        if (audioSource != null && audioSource.equals("alicloud")) {
-            return llmDashClient.streamSpeech(prompt, sessionId, VoiceName);
-        }
-        return llmDashClient.streamSpeechWithXMLY(prompt, sessionId);
+  // 提供语音流 SSE 服务
+  @PostMapping("/v1/stream-speech")
+  public SseEmitter streamSpeech(@RequestBody DashLlmRequestDTO request) {
+    String prompt = request.getPrompt();
+    String sessionId = request.getSessionId();
+    String audioSource = request.getAudioSource();
+    String VoiceName = request.getVoiceName();
+    if (audioSource != null && audioSource.equals("alicloud")) {
+      return llmDashClient.streamSpeech(prompt, sessionId, VoiceName);
     }
+    return llmDashClient.streamSpeechWithXMLY(prompt, sessionId);
+  }
 
-    // 提供文本+语音流 SSE 服务
-    @PostMapping("/v1/stream-speech-cosy")
-    public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request) {
-        String prompt = request.getPrompt();
-        String sessionId = request.getSessionId();
-        return llmDashClient.streamSpeechWithFlowCosyVoice(prompt, sessionId);
-    }
+  // 提供文本+语音流 SSE 服务
+  @PostMapping("/v1/stream-speech-cosy")
+  public SseEmitter streamTextAndSpeech(@RequestBody DashLlmRequestDTO request) {
+    return llmDashClient.streamSpeechWithFlowCosyVoice(request.getPrompt(), request.getSessionId());
+  }
 }

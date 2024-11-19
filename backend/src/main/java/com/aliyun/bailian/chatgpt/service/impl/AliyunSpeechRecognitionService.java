@@ -8,6 +8,7 @@ import com.alibaba.nls.client.protocol.asr.SpeechRecognizerListener;
 import com.alibaba.nls.client.protocol.asr.SpeechRecognizerResponse;
 import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +25,7 @@ public class AliyunSpeechRecognitionService implements SpeechRecognitionService 
     @Autowired
     private TokenService tokenService;
 
-    @Autowired
+    @Value("${aliyun.appKey}")
     private String appKey;
 
     @Override

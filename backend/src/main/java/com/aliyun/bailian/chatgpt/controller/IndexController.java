@@ -16,13 +16,12 @@ import java.io.IOException;
 @Controller
 public class IndexController {
 
-    @Resource
-    private PageConfig pageConfig;
+  @Resource
+  private PageConfig pageConfig;
 
-    @GetMapping(value = {"/"})
-    public String index(HttpServletRequest request, HttpServletResponse response, Model model) throws IOException {
-        //TODO may need to set some user info for ftl
-        model.addAttribute("pageConfig", pageConfig.getPageConfigStr());
-        return "index";
-    }
+  @GetMapping(value = {"/"})
+  public String index(Model model) throws IOException {
+    model.addAttribute("pageConfig", pageConfig.getPageConfigStr());
+    return "index";
+  }
 }

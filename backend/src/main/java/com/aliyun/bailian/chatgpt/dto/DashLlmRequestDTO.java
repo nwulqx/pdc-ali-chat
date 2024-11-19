@@ -26,4 +26,6 @@ public class DashLlmRequestDTO extends RequestBase {
 
     @JsonProperty("VoiceName")
     private String voiceName;
+
+    private String fileBase64;
 }

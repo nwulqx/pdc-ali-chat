@@ -1,6 +1,6 @@
 package com.aliyun.bailian.chatgpt.controller;
 
-import com.aliyun.bailian.chatgpt.client.BailianLlmClient;
+import com.aliyun.bailian.chatgpt.client.BaiLianLlmClient;
 import com.aliyun.bailian.chatgpt.client.DocManagerClient;
 import com.aliyun.bailian.chatgpt.dto.*;
 import com.aliyun.bailian.chatgpt.enums.ErrorCodeEnum;
@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/v1")
 public class CompletionController {
     @Resource
-    private BailianLlmClient llmClient;
+    private BaiLianLlmClient llmClient;
 
     @Resource
     private DocManagerClient docManagerClient;

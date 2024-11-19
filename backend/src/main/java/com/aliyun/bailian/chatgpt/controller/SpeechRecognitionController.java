@@ -14,21 +14,21 @@ import java.util.Map;
 @RequestMapping("/v1/recognizeSpeech")
 public class SpeechRecognitionController {
 
-    @Autowired
-    private SpeechRecognitionService speechRecognitionService;
+  @Autowired
+  private SpeechRecognitionService speechRecognitionService;
 
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> recognize(@RequestPart("file") MultipartFile file) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            String result = speechRecognitionService.recognizeSpeech(file);
-            response.put("code", "0");
-            response.put("data", result);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.put("code", "1");
-            response.put("data", "Error: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+  @PostMapping("/recognize")
+  public ResponseEntity<Map<String, Object>> recognize(@RequestPart("file") MultipartFile file) {
+    Map<String, Object> response = new HashMap<>();
+    try {
+      String result = speechRecognitionService.recognizeSpeech(file);
+      response.put("code", "0");
+      response.put("data", result);
+      return new ResponseEntity<>(response, HttpStatus.OK);
+    } catch (Exception e) {
+      response.put("code", "1");
+      response.put("data", "Error: " + e.getMessage());
+      return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
 }
