@@ -25,10 +25,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -141,14 +144,27 @@ public class YtpdqController {
 
 
   @PostMapping("/streamChat")
-  public SseEmitter streamChat(@RequestPart MultipartFile file) throws Exception {
+  public SseEmitter streamChat(@RequestHeader("sessionId") String userId,@RequestPart MultipartFile file) throws Exception {
     String msg =
         speechRecognitionService.recognizeSpeech(file);
     String voiceName = stringRedisService.getKey(Constants.MUSIC_MODEL);
     if (StringUtils.isNotBlank(voiceName)) {
       voiceName = "longxiaochun";
     }
-    return llmDashClient.streamSpeech(msg, null, voiceName);
+    PosAutoLog log = new PosAutoLog();
+    log.setUserId(StringUtils.defaultString(userId, "system"));
+    log.setQuestion(msg);
+    SseEmitter sseEmitter = llmDashClient.streamSpeech(msg, null, voiceName);
+    log.setAnswer(sseEmitter.toString());
+    log.setCreateTime(LocalDateTime.now());
+    posAutoLogService.savePosAutoLog(log);
+    return sseEmitter;
+  }
+
+
+  @GetMapping(value = "/log/{userId}")
+  public R<List<PosAutoLog>> list(@PathVariable("userId") String userId) {
+    return R.success(posAutoLogService.getByUserId(userId));
   }
 
 
