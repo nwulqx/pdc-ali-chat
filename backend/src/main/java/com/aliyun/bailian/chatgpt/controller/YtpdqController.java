@@ -63,6 +63,17 @@ public class YtpdqController {
 
   List<String> list = List.of("1.开关窗户", "2.开关音乐", "3.开关电视机");
 
+  @GetMapping("/init")
+  public String init() throws IOException {
+    stringRedisService.setKey(Constants.CHECK_XIAO_BAO, "xiao bao");
+    stringRedisService.setKey(Constants.YX_PROMPT, new String(Files.readAllBytes(Paths.get(resource.getURI()))));
+    stringRedisService.setKey(Constants.XIAO_BAO_MUSIC_MODEL, "longxiaochun");
+    stringRedisService.setKey(Constants.DEFAULT_XIAO_BAO_TXT, "你是一个车机助手，现在有人叫你，你作为系统应该固定回复：在的，我是小保，很乐意为您服务!");
+    stringRedisService.setKey(Constants.ABILITY, JSON.toJSONString(list));
+    stringRedisService.setKey(Constants.MUSIC_MODEL, "longxiaochun");
+    return "init";
+  }
+
   @PostMapping("/checkMessage")
   public String checkMessage(@RequestBody MessageDto message) throws IOException {
     String msg = stringRedisService.getKey(Constants.YX_PROMPT);
