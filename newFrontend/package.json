@@ -24,7 +24,10 @@
   "dependencies": {
     "@pui/icons": "0.0.16",
     "@pui/react": "0.1.83",
+    "@react-three/drei": "^9.117.2",
+    "@react-three/fiber": "^8.17.10",
     "@types/lodash": "^4.14.184",
+    "@types/three": "^0.170.0",
     "ahooks": "^3.7.2",
     "axios": "^1.7.7",
     "canvas-nest.js": "^2.0.4",
@@ -41,6 +44,7 @@
     "react-router-dom": "^6.3.0",
     "react-slick": "^0.29.0",
     "slick-carousel": "^1.8.1",
+    "three": "^0.170.0",
     "user-agent": "^1.0.4",
     "vite-plugin-svgr": "^4.2.0"
   },
