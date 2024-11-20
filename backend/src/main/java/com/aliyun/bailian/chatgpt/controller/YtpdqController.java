@@ -1,13 +1,9 @@
 package com.aliyun.bailian.chatgpt.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.aliyun.bailian.chatgpt.client.BaiLianLlmClient;
 import com.aliyun.bailian.chatgpt.client.LLmDashClient;
 import com.aliyun.bailian.chatgpt.config.LlmConfig;
-import com.aliyun.bailian.chatgpt.dto.CompletionRequestDTO;
-import com.aliyun.bailian.chatgpt.dto.DashLlmRequestDTO;
 import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
-import com.aliyun.bailian.chatgpt.utils.Base64ToMultipartFileUtil;
 import com.aliyun.bailian.chatgpt.utils.PinYingUtil;
 import com.aliyun.broadscope.bailian.sdk.ApplicationClient;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsRequest;
