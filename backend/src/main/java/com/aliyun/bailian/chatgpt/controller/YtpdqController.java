@@ -140,6 +140,18 @@ public class YtpdqController {
   }
 
 
+  @PostMapping("/streamChat")
+  public SseEmitter streamChat(@RequestPart MultipartFile file) throws Exception {
+    String msg =
+        speechRecognitionService.recognizeSpeech(file);
+    String voiceName = stringRedisService.getKey(Constants.MUSIC_MODEL);
+    if (StringUtils.isNotBlank(voiceName)) {
+      voiceName = "longxiaochun";
+    }
+    return llmDashClient.streamSpeech(msg, null, voiceName);
+  }
+
+
   @PostMapping("/start/conversation")
   public SseEmitter startConversation(@RequestPart MultipartFile file) throws Exception {
     String msg =
@@ -157,9 +169,9 @@ public class YtpdqController {
     }
     MessageDto messageDto = new MessageDto();
     messageDto.setMessage(msg);
-    String result = checkMessage(messageDto).getData().get("answer").toString();
-    if (StringUtils.isNotBlank(result) && result.contains("desc")) {
-      Boolean success = JSON.parseObject(result).getBoolean("success");
+    JSONObject result = checkMessage(messageDto).getData();
+    if (result !=null && result.containsKey("desc")) {
+      Boolean success = result.getBoolean("success");
       if (success) {
         SseEmitter sseEmitter = new SseEmitter();
         sseEmitter.send(result);
