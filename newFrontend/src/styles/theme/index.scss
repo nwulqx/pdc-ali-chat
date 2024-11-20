@@ -1,0 +1,47 @@
+@import 'dark';
+@import 'light';
+
+$themes: light, dark;
+
+@function themeValue($theme, $lightValue, $darkValue) {
+  @if ($theme == 'light') {
+    @return $lightValue;
+  } @else if ($theme == 'dark') {
+    @return $darkValue;
+  }
+}
+
+@mixin theme($themeName) {
+  @if ($themeName == 'light') {
+    @include light;
+  } @else if ($themeName == 'dark') {
+    @include dark;
+  }
+}
+
+@if not(variable-exists(pui-theme)) or $pui-theme == 'light' {
+  @include light;
+} @else if($pui-theme == 'dark') {
+  @include dark;
+}
+
+@mixin paginationSticky {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 10px;
+  background: $background-color-2;
+  z-index: 2;
+  text-align: right;
+}
+
+@mixin textEllipsisOneLine {
+  overflow: hidden;
+  white-space: nowrap;
+  word-break: break-all;
+  text-overflow: ellipsis;
+}
+
+// share style
+$form-element-margin-right: 24px;
+$form-element-margin-bottom: 36px;

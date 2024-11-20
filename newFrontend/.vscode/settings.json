@@ -1,0 +1,57 @@
+{
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.formatOnSave": true,
+  "eslint.alwaysShowStatus": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.options": {
+    "extensions": [".js", ".vue", ".ts", ".tsx"]
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "cSpell.words": [
+    "ahooks",
+    "Caculate",
+    "carmodel",
+    "carseries",
+    "Cascader",
+    "cmaps",
+    "coms",
+    "Coor",
+    "CUSTOMERCARD",
+    "Edoc",
+    "GETWAY",
+    "inputarea",
+    "loginbanner",
+    "MYCUSTOMER",
+    "MYTASK",
+    "NEWRELAC",
+    "POSPCN",
+    "PVMS",
+    "qrcode",
+    "sockjs",
+    "stompjs",
+    "tequipment",
+    "vguid"
+  ],
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "swaggerToTypes.swaggerJsonUrl": [
+    {
+      "title": "APIs for Porsche DRS Customer Service",
+      "url": "https://gate.dev.porsche-preview.cn/drs-customer-service/v2/api-docs"
+    },
+    {
+      "title": "APIs for Porsche DRS Flow Service",
+      "url": "https://gate.dev.porsche-preview.cn/drs-flow-service/v2/api-docs"
+    },
+    {
+      "title": "APIs for Porsche DRS Poc Order Service",
+      "url": "https://gate.dev.porsche-preview.cn/drs-poc-order-service/v2/api-docs"
+    }
+  ]
+}

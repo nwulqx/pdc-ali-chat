@@ -7,6 +7,8 @@
 /backend/src/main/resources/static
 /backend/src/main/resources/templates
 /frontend/build
+/newFrontend/build
+/newFrontend/node_modules
 
 */**/.ice
 /.pnp
