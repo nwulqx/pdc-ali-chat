@@ -1,9 +1,13 @@
 package com.aliyun.bailian.chatgpt.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.aliyun.bailian.chatgpt.client.LLmDashClient;
 import com.aliyun.bailian.chatgpt.config.LlmConfig;
 import com.aliyun.bailian.chatgpt.constants.Constants;
+import com.aliyun.bailian.chatgpt.dto.MessageDto;
+import com.aliyun.bailian.chatgpt.model.PosAutoLog;
+import com.aliyun.bailian.chatgpt.service.PosAutoLogService;
 import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
 import com.aliyun.bailian.chatgpt.service.StringRedisService;
 import com.aliyun.bailian.chatgpt.utils.PinYingUtil;
@@ -13,14 +17,17 @@ import com.aliyun.broadscope.bailian.sdk.models.CompletionsResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +37,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RestController
 @Slf4j
 @RequestMapping("/ytpdq")
+@CrossOrigin(origins = {"*"})
 public class YtpdqController {
 
 
@@ -49,13 +57,16 @@ public class YtpdqController {
   @Autowired
   private StringRedisService stringRedisService;
 
+  @Autowired
+  private PosAutoLogService posAutoLogService;
+
 
   List<String> list = List.of("1.开关窗户", "2.开关音乐", "3.开关电视机");
 
-  @GetMapping("/checkMessage")
-  public String checkMessage(String message) throws IOException {
+  @PostMapping("/checkMessage")
+  public String checkMessage(@RequestBody MessageDto message) throws IOException {
     String msg = stringRedisService.getKey(Constants.YX_PROMPT);
-    if (StringUtils.isNotBlank(msg)) {
+    if (StringUtils.isBlank(msg)) {
       msg = new String(Files.readAllBytes(Paths.get(resource.getURI())));
     }
     if (StringUtils.isNotBlank(stringRedisService.getKey(Constants.ABILITY))) {
@@ -63,13 +74,22 @@ public class YtpdqController {
     } else {
       msg = msg.replace("{list}", JSON.toJSONString(list));
     }
-    msg = msg.replace("{message}", message);
+    msg = msg.replace("{message}", message.getMessage());
     msg = msg + ",用户输入:" + message;
     CompletionsRequest completionsRequest = new CompletionsRequest();
     completionsRequest.setPrompt(msg);
     completionsRequest.setAppId(llmConfig.getAppIds().getOrDefault("text_chat", null));
     CompletionsResponse completions = applicationClient.completions(completionsRequest);
-    return completions.getData().getText();
+    String text = completions.getData().getText();
+    JSONObject jsonObject = JSON.parseObject(text);
+    log.info("识别结果:{}", text);
+    PosAutoLog log = new PosAutoLog();
+    log.setUserId(StringUtils.defaultString(message.getSessionId(), "system"));
+    log.setQuestion(message.getMessage());
+    log.setAnswer(jsonObject.toJSONString());
+    log.setCreateTime(LocalDateTime.now());
+    posAutoLogService.savePosAutoLog(log);
+    return jsonObject.toJSONString();
   }
 
 
@@ -88,7 +108,9 @@ public class YtpdqController {
       }
       return llmDashClient.streamSpeech(defaultTxt, null, defaultMusicModel);
     }
-    String result = checkMessage(msg);
+    MessageDto messageDto = new MessageDto();
+    messageDto.setMessage(msg);
+    String result = checkMessage(messageDto);
     if (StringUtils.isNotBlank(result) && result.contains("desc")) {
       Boolean success = JSON.parseObject(result).getBoolean("success");
       if (success) {
