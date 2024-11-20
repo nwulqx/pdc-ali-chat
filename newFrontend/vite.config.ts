@@ -71,5 +71,6 @@ export default defineConfig({
         warnRuleAsDeprecated: false, // 关闭废弃警告
       },
     },
+    postcss: './postcss.config.js',
   },
 });

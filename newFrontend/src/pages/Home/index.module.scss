@@ -1,0 +1,8 @@
+@import '_theme/index.scss';
+
+@each $theme in $themes {
+  body[theme='#{$theme}'] {
+    @include theme($theme);
+    
+  }
+}
