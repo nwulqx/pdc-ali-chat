@@ -1,12 +1,19 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
+import Home from './pages/Home';
+import Login from './pages/Login';
+import { useCanvasNest } from './hooks/useCanvasNest';
+
 import './styles/app.scss';
 
 const App: React.FC = () => {
+  useCanvasNest();
+
   return (
     <Routes>
-      <Route path="/auth" element={<div>123</div>} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/home" element={<Home />} />
     </Routes>
   );
 };
