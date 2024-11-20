@@ -11,6 +11,7 @@ import com.aliyun.bailian.chatgpt.service.PosAutoLogService;
 import com.aliyun.bailian.chatgpt.service.SpeechRecognitionService;
 import com.aliyun.bailian.chatgpt.service.StringRedisService;
 import com.aliyun.bailian.chatgpt.utils.PinYingUtil;
+import com.aliyun.bailian.chatgpt.utils.R;
 import com.aliyun.broadscope.bailian.sdk.ApplicationClient;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsRequest;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsResponse;
@@ -74,14 +75,15 @@ public class YtpdqController {
     return "init";
   }
 
-  @PostMapping("/checkMessage")
-  public String checkMessage(@RequestBody MessageDto message) throws IOException {
+  @PostMapping(value = "/checkMessage")
+  public R<JSONObject> checkMessage(@RequestBody MessageDto message) throws IOException {
     String msg = stringRedisService.getKey(Constants.YX_PROMPT);
     if (StringUtils.isBlank(msg)) {
       msg = new String(Files.readAllBytes(Paths.get(resource.getURI())));
     }
-    if (StringUtils.isNotBlank(stringRedisService.getKey(Constants.ABILITY))) {
-      msg = msg.replace("{list}", stringRedisService.getKey(Constants.ABILITY));
+    String ability = stringRedisService.getKey(Constants.ABILITY);
+    if (StringUtils.isNotBlank(ability)) {
+      msg = msg.replace("{list}", ability);
     } else {
       msg = msg.replace("{list}", JSON.toJSONString(list));
     }
@@ -100,7 +102,7 @@ public class YtpdqController {
     log.setAnswer(jsonObject.toJSONString());
     log.setCreateTime(LocalDateTime.now());
     posAutoLogService.savePosAutoLog(log);
-    return jsonObject.toJSONString();
+    return R.success(jsonObject);
   }
 
 
@@ -121,7 +123,7 @@ public class YtpdqController {
     }
     MessageDto messageDto = new MessageDto();
     messageDto.setMessage(msg);
-    String result = checkMessage(messageDto);
+    String result = checkMessage(messageDto).getData().get("answer").toString();
     if (StringUtils.isNotBlank(result) && result.contains("desc")) {
       Boolean success = JSON.parseObject(result).getBoolean("success");
       if (success) {
