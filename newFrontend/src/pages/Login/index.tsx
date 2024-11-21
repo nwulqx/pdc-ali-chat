@@ -15,6 +15,31 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// 添加类型定义
+interface FaceDetectionState {
+  isDetected: boolean;
+  progress: number;
+  message: string;
+  status: 'idle' | 'detecting' | 'success' | 'error';
+}
+
+// 添加常量配置
+const FACE_CONFIG = {
+  DETECTION_INTERVAL: 700, // 检测间隔
+  MAX_ATTEMPTS: 60, // 最大尝试次数 (30秒)
+  MATCH_THRESHOLD: 0.4, // 人脸匹配阈值
+  MIN_DETECTION_CONFIDENCE: 0.7, // 最小检测置信度
+} as const;
+
+// 修改类型定义
+interface FaceDetectionState {
+  isDetected: boolean;
+  matchScore: number; // 添加缺失的字段
+  progress: number;
+  message: string;
+  status: 'idle' | 'detecting' | 'success' | 'error';
+}
+
 export default function Face() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -22,10 +47,11 @@ export default function Face() {
   const [loading, setLoading] = useState(false); // 添加加载状态
   const [isFaceMode, setIsFaceMode] = useState(false);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const webcamRef = useRef<Webcam>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [attempts, setAttempts] = useState(0);
+  const [successfulFrames, setSuccessfulFrames] = useState(0);
   const [authorizedDescriptor, setAuthorizedDescriptor] = useState<any>(null);
-  const [cameraError, setCameraError] = useState<string>('');
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -35,6 +61,51 @@ export default function Face() {
     message: '',
     type: 'success',
   });
+  const [recognitionTimer, setRecognitionTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // 修改初始状态以匹配接口
+  const [detectionState, setDetectionState] = useState<FaceDetectionState>({
+    isDetected: false,
+    matchScore: 0,
+    progress: 0,
+    message: '准备开始识别...',
+    status: 'idle',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast((prev) => ({ ...prev, show: false }));
+    }, 3000);
+  };
+  // 优化 updateDetectionState 函数
+  const updateDetectionState = useCallback(
+    (updates: Partial<FaceDetectionState> | ((prev: FaceDetectionState) => Partial<FaceDetectionState>)) => {
+      setDetectionState((prev) => ({
+        ...prev,
+        ...(typeof updates === 'function' ? updates(prev) : updates),
+      }));
+    },
+    []
+  );
+  // 修改停止识别函数
+  const stopFaceRecognition = useCallback(() => {
+    if (recognitionTimer) {
+      clearInterval(recognitionTimer);
+      setRecognitionTimer(null);
+    }
+    setIsFaceMode(false);
+    // 重置状态
+    updateDetectionState({
+      isDetected: false,
+      matchScore: 0,
+      progress: 0,
+      message: '准备开始识别...',
+      status: 'idle',
+    });
+    setSuccessfulFrames(0);
+    setAttempts(0);
+  }, [recognitionTimer, updateDetectionState]);
 
   const navigate = useNavigate();
 
@@ -89,62 +160,143 @@ export default function Face() {
     loadFaceModels();
   }, []);
 
-  const startFaceRecognition = () => {
-    setCameraError('');
-    setIsFaceMode(true);
-  };
+  // 绘制人脸检测框
+  const drawFaceDetection = useCallback(async (detection: any) => {
+    const canvas = canvasRef.current;
+    const video = webcamRef.current?.video;
 
-  const stopFaceRecognition = () => {
-    setIsFaceMode(false);
-  };
+    if (!canvas || !video) return;
 
-  const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast((prev) => ({ ...prev, show: false }));
-    }, 3000);
-  };
+    const displaySize = { width: video.videoWidth, height: video.videoHeight };
+    faceapi.matchDimensions(canvas, displaySize);
 
-  const capture = useCallback(async () => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        setCapturedImage(imageSrc);
-        try {
-          const img = new Image();
-          img.src = imageSrc;
-          await new Promise((resolve) => (img.onload = resolve));
+    const resizedDetection = faceapi.resizeResults(detection, displaySize);
 
-          const detection = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+    faceapi.draw.drawDetections(canvas, resizedDetection);
+  }, []);
 
-          if (detection) {
-            const distance = faceapi.euclideanDistance(detection.descriptor, authorizedDescriptor);
-            console.log('人脸匹配度:', (1 - distance).toFixed(2));
+  // 修改人脸识别逻辑
+  const performFaceRecognition = useCallback(async () => {
+    if (!webcamRef.current || !authorizedDescriptor) return;
 
-            if (distance < 0.4) {
-              showToast('人脸识别成功！', 'success');
-              setLoading(true);
-              setTimeout(() => {
-                stopFaceRecognition();
-                setLoading(false);
-                navigate('/home');
-              }, 1000);
-            } else {
-              showToast('人脸匹配失败，请重试', 'error');
-              setCapturedImage(null);
-            }
-          } else {
-            showToast('未检测到人脸，请重试', 'warning');
-            setCapturedImage(null);
-          }
-        } catch (error) {
-          console.error('人脸识别错误:', error);
-          showToast('人脸识别失败，请重试', 'error');
-          setCapturedImage(null);
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+
+    try {
+      const img = new Image();
+      img.src = imageSrc;
+      await new Promise((resolve) => (img.onload = resolve));
+
+      const detection = await faceapi
+        .detectSingleFace(
+          img,
+          new faceapi.SsdMobilenetv1Options({ minConfidence: FACE_CONFIG.MIN_DETECTION_CONFIDENCE })
+        )
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (detection) {
+        await drawFaceDetection(detection);
+
+        const distance = faceapi.euclideanDistance(detection.descriptor, authorizedDescriptor);
+        const matchScore = 1 - distance;
+
+        updateDetectionState({
+          isDetected: true,
+          progress: Math.min((attempts / FACE_CONFIG.MAX_ATTEMPTS) * 100, 100),
+          message: `检测到人脸 (匹配度: ${(matchScore * 100).toFixed(1)}%)`,
+        });
+
+        if (distance < FACE_CONFIG.MATCH_THRESHOLD) {
+          return true;
         }
+      } else {
+        updateDetectionState({
+          isDetected: false,
+          message: '未检测到人脸，请调整位置',
+        });
       }
+    } catch (error) {
+      console.error('人脸识别错误:', error);
+      updateDetectionState({
+        status: 'error',
+        message: '识别过程出错，请重试',
+      });
     }
-  }, [authorizedDescriptor, navigate]);
+    return false;
+  }, [authorizedDescriptor, attempts, drawFaceDetection, updateDetectionState]);
+
+  // 修改开始识别函数
+  const startFaceRecognition = useCallback(() => {
+    // 立即更新初始状态
+    setIsFaceMode(true);
+    setAttempts(0);
+    setSuccessfulFrames(0);
+
+    // 确保状态立即更新
+    updateDetectionState({
+      status: 'detecting',
+      progress: 0,
+      matchScore: 0,
+      message: '请将脸部对准摄像头',
+      isDetected: false,
+    });
+
+    // 使用 setTimeout 确保状态已更新后再开始计时器
+    setTimeout(() => {
+      const timer = setInterval(async () => {
+        setAttempts((prev) => {
+          const newAttempts = prev + 1;
+          const progress = (newAttempts / FACE_CONFIG.MAX_ATTEMPTS) * 100;
+
+          // 使用函数式更新确保状态同步
+          updateDetectionState((state) => ({
+            ...state,
+            progress: progress,
+            message: state.isDetected ? state.message : '请将脸部对准摄像头',
+          }));
+
+          if (newAttempts >= FACE_CONFIG.MAX_ATTEMPTS) {
+            clearInterval(timer);
+            stopFaceRecognition();
+            showToast('识别超时，请重试', 'error');
+            return prev;
+          }
+          return newAttempts;
+        });
+
+        const isSuccess = await performFaceRecognition();
+
+        if (isSuccess) {
+          updateDetectionState({
+            status: 'success',
+            message: '识别成功！',
+          });
+          showToast('人脸识别成功！', 'success');
+          clearInterval(timer);
+          setLoading(true);
+
+          setTimeout(() => {
+            stopFaceRecognition();
+            setLoading(false);
+            navigate('/home');
+          }, 1000);
+        }
+      }, FACE_CONFIG.DETECTION_INTERVAL);
+
+      setRecognitionTimer(timer);
+    }, 0);
+  }, [performFaceRecognition, navigate, showToast, stopFaceRecognition, updateDetectionState]);
+
+  // 组件卸载时的清理
+  useEffect(() => {
+    return () => {
+      if (recognitionTimer) {
+        clearInterval(recognitionTimer);
+      }
+    };
+  }, [recognitionTimer]);
 
   return (
     <>
@@ -169,39 +321,38 @@ export default function Face() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="relative bg-white p-4 rounded-xl shadow-lg">
-              {capturedImage ? (
-                <div className="relative">
-                  <img src={capturedImage} alt="captured" className="w-full rounded-lg" />
-                  <button
-                    onClick={() => setCapturedImage(null)}
-                    className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    重新拍摄
-                  </button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <Webcam
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{
-                      width: 640,
-                      height: 480,
-                      facingMode: 'user',
-                    }}
-                    className="w-full rounded-lg"
-                    mirrored={true}
-                  />
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                    <button
-                      onClick={capture}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2">
-                      <Camera className="w-5 h-5" />
-                      拍照识别
-                    </button>
+              <div className="relative">
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={videoConstraints}
+                  className="w-full rounded-lg"
+                  mirrored={true}
+                />
+                <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
+                {/* 状态提示层 */}
+                <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 text-white p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span>{detectionState.message}</span>
+                    {detectionState.status === 'detecting' && <span>{Math.round(detectionState.progress)}%</span>}
                   </div>
+                  {detectionState.status === 'detecting' && (
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${detectionState.progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                    <LoadingSpinner />
+                    <span className="ml-2 text-white">识别中...</span>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={stopFaceRecognition}
                 className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors">
