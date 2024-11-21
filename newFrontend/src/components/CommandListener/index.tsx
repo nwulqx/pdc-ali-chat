@@ -103,10 +103,6 @@ const CommandListener: React.FC<Props> = ({ onClose, onCommandComplete }) => {
   }, []);
 
   const handleClose = () => {
-    const finalTranscript = transcriptRef.current;
-    if (finalTranscript.trim()) {
-      onCommandComplete(finalTranscript);
-    }
     onClose();
   };
 
