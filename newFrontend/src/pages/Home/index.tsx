@@ -1,9 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Navigation, User, Sun, Moon, Globe, Music, Car, Calendar, Settings, Coffee, ChevronLeft } from 'lucide-react';
+import {
+  Navigation,
+  User,
+  Sun,
+  Moon,
+  Globe,
+  Music,
+  Car,
+  Calendar,
+  Settings,
+  Coffee,
+  ChevronLeft,
+  Mic,
+  MicOff,
+} from 'lucide-react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import OpenOnceConversation from '@/components/OpenOnceConversation';
+
 import AssistantChat from '../../components/AssistantChat';
 
 export default function CarSystemHomepage() {
@@ -12,6 +28,7 @@ export default function CarSystemHomepage() {
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('中文');
   const [voice, setVoice] = useState('默认');
+  const [isListeningMode, setIsListeningMode] = useState(false);
   const carModelRef = useRef<HTMLDivElement>(null);
   const [isNavExpanded, setIsNavExpanded] = useState(true);
 
@@ -112,6 +129,10 @@ export default function CarSystemHomepage() {
     setVoice(voice === '默认' ? '女声' : voice === '女声' ? '男声' : '默认');
   };
 
+  const toggleListeningMode = () => {
+    setIsListeningMode(!isListeningMode);
+  };
+
   return (
     <div className={`min-h-screen bg-[#f2f2f2] text-[#000000] p-8 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       {/* 顶部栏 */}
@@ -142,6 +163,15 @@ export default function CarSystemHomepage() {
           <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-[#1a1a1a] to-[#4a4a4a] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
         </motion.h1>
         <div className="flex items-center space-x-4">
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleListeningMode}
+            className={`bg-[#d5001c] text-white p-2 rounded-full ${
+              isListeningMode ? 'bg-opacity-100' : 'bg-opacity-50'
+            }`}>
+            {isListeningMode ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -239,6 +269,7 @@ export default function CarSystemHomepage() {
           onSubmit={handleSubmit}
         />
       </div>
+      {isListeningMode && <OpenOnceConversation />}
     </div>
   );
 }

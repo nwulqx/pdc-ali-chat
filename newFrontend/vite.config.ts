@@ -33,12 +33,18 @@ export default defineConfig({
   define: {
     APP_VERSION: JSON.stringify(process.env.npm_package_version),
   },
+  optimizeDeps: {
+    include: ['wavesurfer.js', 'wavesurfer.js/dist/plugins/record.esm.js'],
+  },
   build: {
     target: 'es2015',
     outDir: 'build',
     chunkSizeWarningLimit: 500,
     assetsInlineLimit: 3072,
     sourcemap: 'hidden',
+    commonjsOptions: {
+      include: [/wavesurfer.js/],
+    },
   },
   base: '/',
   resolve: {

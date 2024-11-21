@@ -45,11 +45,16 @@
     "react-joyride": "^2.7.4",
     "react-router-dom": "^6.3.0",
     "react-slick": "^0.29.0",
+    "react-speech-recognition": "^3.10.0",
     "react-webcam": "^7.2.0",
     "slick-carousel": "^1.8.1",
     "three": "^0.170.0",
     "user-agent": "^1.0.4",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "wavesurfer.js": "^7.7.15"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
