@@ -44,13 +44,13 @@ public class LlmDashSseController {
 
   List<String> list = List.of("1.开关窗户", "2.开关音乐", "3.开关电视机");
 
-
+  @ResponseBody
   @PostMapping(value = "/checkMessage")
   public R<Object> checkMessage(@RequestBody MessageDto message) throws IOException {
     String msg = stringRedisService.getKey(Constants.YX_PROMPT);
-//    if (StringUtils.isBlank(msg)) {
-//      msg = new String(Files.readAllBytes(Paths.get(resource.getURI())));
-//    }
+    // if (StringUtils.isBlank(msg)) {
+    // msg = new String(Files.readAllBytes(Paths.get(resource.getURI())));
+    // }
     String ability = stringRedisService.getKey(Constants.ABILITY);
     if (StringUtils.isNotBlank(ability)) {
       msg = msg.replace("{list}", ability);
@@ -73,7 +73,6 @@ public class LlmDashSseController {
     posAutoLogService.savePosAutoLog(log);
     return R.success(jsonObject);
   }
-
 
   // 提供文本流 SSE 服务
   @PostMapping("/v1/stream-text")

@@ -95,7 +95,7 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
     }
 
     // 发送 checkMessage 请求
-    fetch('http://10.10.100.192:8080/ytpdq/checkMessage', {
+    fetch('http://127.0.0.1:8080/checkMessage', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
