@@ -15,12 +15,10 @@ import {
   Mic,
   MicOff,
 } from 'lucide-react';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import OpenOnceConversation from '@/components/OpenOnceConversation';
 
 import AssistantChat from '../../components/AssistantChat';
+import CarModel from '@/components/CarModel';
 
 export default function CarSystemHomepage() {
   const [conversation, setConversation] = useState<string[]>([]);
@@ -29,7 +27,6 @@ export default function CarSystemHomepage() {
   const [language, setLanguage] = useState('中文');
   const [voice, setVoice] = useState('默认');
   const [isListeningMode, setIsListeningMode] = useState(false);
-  const carModelRef = useRef<HTMLDivElement>(null);
   const [isNavExpanded, setIsNavExpanded] = useState(true);
 
   useEffect(() => {
@@ -42,68 +39,6 @@ export default function CarSystemHomepage() {
     }, 3000);
     return () => clearInterval(timer);
   }, [conversation]);
-
-  useEffect(() => {
-    if (carModelRef.current) {
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        carModelRef.current.clientWidth / carModelRef.current.clientHeight,
-        0.1,
-        1000
-      );
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(carModelRef.current.clientWidth, carModelRef.current.clientHeight);
-      carModelRef.current.appendChild(renderer.domElement);
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
-      scene.add(ambientLight);
-
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-      directionalLight.position.set(1, 2, 1);
-      scene.add(directionalLight);
-
-      const secondaryLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      secondaryLight.position.set(-1, 1, -1);
-      scene.add(secondaryLight);
-
-      const loader = new GLTFLoader();
-      loader.load(
-        '/porsche_gt3_rs.glb',
-        (gltf) => {
-          const model = gltf.scene;
-          model.scale.set(2.0, 2.0, 2.0);
-          scene.add(model);
-
-          const controls = new OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
-          controls.dampingFactor = 0.25;
-          controls.screenSpacePanning = false;
-          controls.maxPolarAngle = Math.PI / 2;
-
-          camera.position.set(5, 3, 5);
-          camera.lookAt(0, 0, 0);
-
-          const animate = () => {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-          };
-          animate();
-        },
-        undefined,
-        (error) => {
-          console.error('An error occurred while loading the model:', error);
-        }
-      );
-
-      return () => {
-        if (carModelRef.current) {
-          carModelRef.current.removeChild(renderer.domElement);
-        }
-      };
-    }
-  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
@@ -252,14 +187,7 @@ export default function CarSystemHomepage() {
         </motion.div>
 
         {/* 中央车辆信息 */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex-grow bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-3xl p-6 shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-[#000000]">车辆信息</h2>
-          <div ref={carModelRef} style={{ width: '100%', height: 'calc(100% - 40px)' }} />
-        </motion.div>
+        <CarModel />
 
         {/* 右侧智能助手 */}
         <AssistantChat
