@@ -94,6 +94,24 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
       recognitionRef.current.stop();
     }
 
+    // 发送 checkMessage 请求
+    fetch('http://10.10.100.192:8080/ytpdq/checkMessage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: command,
+      }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        console.log('checkMessage 响应:', result);
+      })
+      .catch((error) => {
+        console.error('checkMessage 请求失败:', error);
+      });
+
     try {
       const requestData: StreamSpeechRequest = {
         prompt: command,
