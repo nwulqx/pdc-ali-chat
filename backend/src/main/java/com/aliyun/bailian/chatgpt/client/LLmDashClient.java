@@ -4,6 +4,7 @@ import com.alibaba.dashscope.app.Application;
 import com.alibaba.dashscope.app.ApplicationParam;
 import com.alibaba.dashscope.app.ApplicationResult;
 import com.alibaba.dashscope.audio.tts.SpeechSynthesisResult;
+import com.alibaba.dashscope.common.History;
 import com.alibaba.dashscope.common.ResultCallback;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisAudioFormat;
 import com.alibaba.dashscope.audio.ttsv2.SpeechSynthesisParam;
@@ -16,13 +17,20 @@ import com.aliyun.bailian.chatgpt.dto.Result;
 import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisRequest;
 import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisResponse;
 import com.aliyun.bailian.chatgpt.dto.SpeechSynthesisResultDTO;
+import com.aliyun.bailian.chatgpt.model.PosAutoLog;
+import com.aliyun.bailian.chatgpt.service.PosAutoLogService;
 import com.aliyun.bailian.chatgpt.service.impl.FlowingSpeechSynthesizerService;
 import com.aliyun.bailian.chatgpt.service.impl.SpeechSynthesisService;
 import io.reactivex.Flowable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.PreDestroy;
@@ -49,6 +57,8 @@ public class LLmDashClient {
 
   @Autowired
   private FlowingSpeechSynthesizerService flowingSpeechSynthesizerService;
+  @Autowired
+  private PosAutoLogService posAutoLogService;
 
   private final ExecutorService textProcessorExecutor = Executors.newSingleThreadExecutor();
   private final ExecutorService resultProcessorExecutor = Executors.newSingleThreadExecutor();
@@ -56,6 +66,20 @@ public class LLmDashClient {
   private StringBuilder textBuffer = new StringBuilder();
   private static final Pattern SENTENCE_END_PATTERN = Pattern.compile("[.。!！?？;；，,]");
   private int priority = 1000;
+
+  /**
+   * 根据用户获取历史记录
+   * @param userId
+   * @return
+   */
+  private List<History> getHistory(String userId) {
+    List<PosAutoLog> list = posAutoLogService.getByUserId(userId);
+    if (CollectionUtils.isEmpty(list)) {
+      return new ArrayList<>();
+    }
+    return list.stream().map(item -> History.builder().user(item.getQuestion()).bot(item.getAnswer()).build())
+        .collect(Collectors.toList());
+  }
 
   // 提取 ApplicationParam 的构建逻辑，减少重复
   private ApplicationParam buildApplicationParam(String prompt, String sessionId) {
@@ -65,6 +89,7 @@ public class LLmDashClient {
         .prompt(prompt)
         .topK(llmDashConfig.getTopK())
         .seed(llmDashConfig.getSeed())
+        .history(getHistory(sessionId))
         .incrementalOutput(true)
         .sessionId(sessionId) // 使用 sessionId 维护会话
         .build();
