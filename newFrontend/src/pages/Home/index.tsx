@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Navigation,
   User,
@@ -14,22 +14,23 @@ import {
   ChevronLeft,
   Mic,
   MicOff,
-} from 'lucide-react';
-import OpenOnceConversation from '@/components/OpenOnceConversation';
-import { handleStreamSpeech } from '@/utils/speechUtils';
-import CarModel from '@/components/CarModel';
-import NavBar from '@/components/NavBar';
+} from "lucide-react";
+import OpenOnceConversation from "@/components/OpenOnceConversation";
+import { handleStreamSpeech } from "@/utils/speechUtils";
+import CarModel from "@/components/CarModel";
+import NavBar from "@/components/NavBar";
 
-import AssistantChat from '../../components/AssistantChat';
-import { SubmitType } from '@/types/chat';
+import AssistantChat from "../../components/AssistantChat";
+import { SubmitType } from "@/types/chat";
+import Schedule from "@/components/Schedule";
 
 export default function CarSystemHomepage() {
-  const [theme, setTheme] = useState('light');
-  const [language, setLanguage] = useState('中文');
-  const [voice, setVoice] = useState('默认');
+  const [theme, setTheme] = useState("light");
+  const [language, setLanguage] = useState("中文");
+  const [voice, setVoice] = useState("默认");
   const [isListeningMode, setIsListeningMode] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const [currentModule, setCurrentModule] = useState('车辆信息');
+  const [currentModule, setCurrentModule] = useState("车辆信息");
 
   const handleResetListeningMode = () => {
     setIsListeningMode(false);
@@ -39,15 +40,15 @@ export default function CarSystemHomepage() {
   };
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   const toggleLanguage = () => {
-    setLanguage(language === '中文' ? 'English' : '中文');
+    setLanguage(language === "中文" ? "English" : "中文");
   };
 
   const toggleVoice = () => {
-    setVoice(voice === '默认' ? '女声' : voice === '女声' ? '男声' : '默认');
+    setVoice(voice === "默认" ? "女声" : voice === "女声" ? "男声" : "默认");
   };
 
   const toggleListeningMode = () => {
@@ -55,7 +56,11 @@ export default function CarSystemHomepage() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#f2f2f2] text-[#000000] p-8 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
+    <div
+      className={`min-h-screen bg-[#f2f2f2] text-[#000000] p-8 flex flex-col ${
+        theme === "dark" ? "dark" : ""
+      }`}
+    >
       {/* 顶部栏 */}
       <div className="flex justify-between items-center mb-8">
         <motion.h1
@@ -70,14 +75,15 @@ export default function CarSystemHomepage() {
             scale: {
               duration: 3,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: "easeInOut",
             },
           }}
           className="text-3xl font-bold relative group inline-block"
           style={{
-            WebkitFontSmoothing: 'antialiased',
-            MozOsxFontSmoothing: 'grayscale',
-          }}>
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+          }}
+        >
           <span className="bg-gradient-to-r from-[#1a1a1a] to-[#4a4a4a] text-transparent bg-clip-text">
             车载系统-AutoPoss
           </span>
@@ -89,34 +95,47 @@ export default function CarSystemHomepage() {
             whileTap={{ scale: 0.9 }}
             onClick={toggleListeningMode}
             className={`bg-[#d5001c] text-white p-2 rounded-full ${
-              isListeningMode ? 'bg-opacity-100' : 'bg-opacity-50'
-            }`}>
-            {isListeningMode ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+              isListeningMode ? "bg-opacity-100" : "bg-opacity-50"
+            }`}
+          >
+            {isListeningMode ? (
+              <Mic className="w-6 h-6" />
+            ) : (
+              <MicOff className="w-6 h-6" />
+            )}
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleTheme}
-            className="bg-[#d5001c] text-white p-2 rounded-full">
-            {theme === 'light' ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+            className="bg-[#d5001c] text-white p-2 rounded-full"
+          >
+            {theme === "light" ? (
+              <Sun className="w-6 h-6" />
+            ) : (
+              <Moon className="w-6 h-6" />
+            )}
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleLanguage}
-            className="bg-[#d5001c] text-white p-2 rounded-full">
+            className="bg-[#d5001c] text-white p-2 rounded-full"
+          >
             <Globe className="w-6 h-6" />
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleVoice}
-            className="bg-[#d5001c] text-white p-2 rounded-full">
+            className="bg-[#d5001c] text-white p-2 rounded-full"
+          >
             <Music className="w-6 h-6" />
           </motion.button>
           <motion.div
             whileHover={{ scale: 1.1 }}
-            className="bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-full p-2 shadow-lg">
+            className="bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-full p-2 shadow-lg"
+          >
             <User className="w-6 h-6 text-[#d5001c]" />
           </motion.div>
         </div>
@@ -133,12 +152,20 @@ export default function CarSystemHomepage() {
         />
 
         {/* 中央车辆信息 */}
-        <CarModel />
+        {currentModule === "日程" ? (
+          <Schedule />
+        ) : currentModule === "车辆信息" ? (
+          <CarModel />
+        ) : null}
 
         {/* 右侧智能助手 */}
         <AssistantChat />
       </div>
-      {isListeningMode && <OpenOnceConversation handleResetListeningMode={handleResetListeningMode} />}
+      {isListeningMode && (
+        <OpenOnceConversation
+          handleResetListeningMode={handleResetListeningMode}
+        />
+      )}
     </div>
   );
 }
