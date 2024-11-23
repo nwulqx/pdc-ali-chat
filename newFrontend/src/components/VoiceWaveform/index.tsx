@@ -21,7 +21,7 @@ const VoiceWaveform = forwardRef<VoiceWaveformRef, VoiceWaveformProps>(
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number>();
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const recognitionRef = useRef<any | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
     // 暴露清理方法给父组件
@@ -167,12 +167,12 @@ const VoiceWaveform = forwardRef<VoiceWaveformRef, VoiceWaveformProps>(
         recognitionRef.current.lang = 'zh-CN';
 
         // 处理识别结果
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+        recognitionRef.current.onresult = (event: any) => {
           const results = Array.from(event.results);
 
           for (let i = event.resultIndex; i < results.length; i++) {
             const transcript = results[i][0].transcript;
-            const isFinal = results[i].isFinal;
+            const isFinal = results[i][0].isFinal;
 
             console.log('识别结果:', { transcript, isFinal });
 
@@ -243,10 +243,7 @@ const VoiceWaveform = forwardRef<VoiceWaveformRef, VoiceWaveformProps>(
           scrollingWaveform: true,
           renderRecordedAudio: false,
           audioBitsPerSecond: 128000,
-          mediaRecorderConfig: {
-            audioBitsPerSecond: 128000,
-            mimeType: 'audio/webm',
-          },
+          mimeType: 'audio/webm',
         })
       );
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import ReactDOM from 'react-dom';
 
 type ToastType = 'success' | 'error' | 'warning';
 
@@ -94,7 +94,8 @@ const createToastContainer = () => {
 // 初始化 Toast
 const initializeToast = () => {
   const container = document.getElementById('toast-container') || createToastContainer();
-  ReactDOM.render(<ToastContainer />, container);
+  const root = createRoot(container); // 创建一个 root
+  root.render(<ToastContainer />);
 };
 
 // Toast 对象 - 同时支持组件形式和静态方法

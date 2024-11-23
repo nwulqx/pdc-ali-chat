@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toast } from '../Toast';
 import CommandListener from '../CommandListener';
-import styles from './index.module.less';
 import { handleStreamSpeech, checkVoiceCommand, playAudio } from '@/utils/speechUtils';
 
 interface Props {
