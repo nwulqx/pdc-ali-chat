@@ -113,7 +113,6 @@ const VoiceWaveform = forwardRef<VoiceWaveformRef, VoiceWaveformProps>(
     const startRecording = async () => {
       try {
         await record?.startRecording();
-        recognitionRef.current?.start();
       } catch (error) {
         console.error('Error starting recording:', error);
       }

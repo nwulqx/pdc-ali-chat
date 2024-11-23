@@ -156,7 +156,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
     // 添加一个标志来追踪流是否结束
     let streamEnded = false;
 
-    const response = await fetch('http://127.0.0.1:8080/v1/stream-speech', {
+    const response = await fetch(`${API_BASE_URL}/v1/stream-speech`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

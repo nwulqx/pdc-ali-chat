@@ -24,57 +24,17 @@ import AssistantChat from '../../components/AssistantChat';
 import { SubmitType } from '@/types/chat';
 
 export default function CarSystemHomepage() {
-  const [conversation, setConversation] = useState<string[]>([]);
-  const [inputText, setInputText] = useState('');
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('中文');
   const [voice, setVoice] = useState('默认');
   const [isListeningMode, setIsListeningMode] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
-  const [isChatExpanded, setIsChatExpanded] = useState(true);
 
   const handleResetListeningMode = () => {
     setIsListeningMode(false);
     setTimeout(() => {
       setIsListeningMode(true);
     }, 100);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value);
-  };
-
-  const handleSubmit = async (
-    e: React.FormEvent & { currentText?: string },
-    submitType: SubmitType = SubmitType.TEXT
-  ) => {
-    e.preventDefault();
-
-    // 获取要处理的文本
-    const currentText = (e as any).currentText || inputText.trim();
-
-    if (!currentText && submitType === SubmitType.TEXT) {
-      return; // 如果是文字模式且没有输入，直接返回
-    }
-
-    try {
-      // 根据不同的提交类型处理
-      if (submitType === SubmitType.TEXT) {
-        // 文字模式
-        setConversation((prev) => [...prev, `用户：${currentText}`]);
-        setInputText('');
-      } else if (submitType === SubmitType.AUDIO) {
-        // 音频模式
-        setConversation((prev) => [...prev, `用户：${currentText}`]);
-        await handleStreamSpeech(currentText, () => {
-          console.log('音频模式：语音合成完成');
-        });
-        setInputText('');
-      }
-    } catch (error) {
-      console.error('提交处理出错:', error);
-      // TODO: 可以添加错误提示
-    }
   };
 
   const toggleTheme = () => {
@@ -170,14 +130,7 @@ export default function CarSystemHomepage() {
         <CarModel />
 
         {/* 右侧智能助手 */}
-        <AssistantChat
-          conversation={conversation}
-          inputText={inputText}
-          onInputChange={handleInputChange}
-          onSubmit={handleSubmit}
-          isChatExpanded={isChatExpanded}
-          setIsChatExpanded={setIsChatExpanded}
-        />
+        <AssistantChat />
       </div>
       {isListeningMode && <OpenOnceConversation handleResetListeningMode={handleResetListeningMode} />}
     </div>

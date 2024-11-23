@@ -1,28 +1,76 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Send, Mic } from 'lucide-react';
+import { handleStreamSpeech } from '@/utils/speechUtils';
 import { SubmitType } from '@/types/chat';
+import VoiceWaveform, { VoiceWaveformRef } from '@/components/VoiceWaveform';
 
-interface AssistantChatProps {
-  conversation: string[];
-  inputText: string;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent & { currentText?: string }, type: SubmitType) => void;
-  isChatExpanded: boolean;
-  setIsChatExpanded: (value: boolean) => void;
-}
+export default function AssistantChat() {
+  const [conversation, setConversation] = useState<string[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isResponding, setIsResponding] = useState(false);
+  const waveformRef = useRef<VoiceWaveformRef>(null);
 
-export default function AssistantChat({
-  conversation,
-  inputText,
-  onInputChange,
-  onSubmit,
-  isChatExpanded,
-  setIsChatExpanded,
-}: AssistantChatProps) {
-  const handleSubmitWrapper = (e: React.FormEvent) => {
-    const submitType = inputText.trim() ? SubmitType.TEXT : SubmitType.AUDIO;
-    onSubmit(e, submitType);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+  };
+
+  const handleSubmit = async (
+    e: React.FormEvent & { currentText?: string },
+    submitType: SubmitType = SubmitType.TEXT
+  ) => {
+    e.preventDefault();
+
+    const currentText = (e as any).currentText || inputText.trim();
+
+    if (!currentText && submitType === SubmitType.TEXT) {
+      return;
+    }
+
+    try {
+      if (submitType === SubmitType.TEXT) {
+        setConversation((prev) => [...prev, `用户：${currentText}`]);
+        setInputText('');
+        handleStreamSpeech(currentText);
+      } else if (submitType === SubmitType.AUDIO) {
+        setConversation((prev) => [...prev, `用户：${currentText}`]);
+        await handleStreamSpeech(currentText, () => {
+          console.log('音频模式：语音合成完成');
+        });
+        setInputText('');
+      }
+    } catch (error) {
+      console.error('提交处理出错:', error);
+    }
+  };
+
+  const handleVoiceButtonClick = () => {
+    if (!isResponding) {
+      setIsRecording(!isRecording);
+    }
+  };
+
+  const handleTranscript = async (text: string) => {
+    if (text.trim()) {
+      setIsResponding(true);
+      // 暂停录音
+      setIsRecording(false);
+
+      try {
+        await handleStreamSpeech(text, () => {
+          // 语音回复结束后恢复录音
+          setIsResponding(false);
+          setIsRecording(true);
+        });
+        setConversation((prev) => [...prev, `用户：${text}`]);
+      } catch (error) {
+        console.error('语音处理错误:', error);
+        setIsResponding(false);
+        setIsRecording(true);
+      }
+    }
   };
 
   return (
@@ -57,20 +105,29 @@ export default function AssistantChat({
             ))}
           </div>
 
-          <form onSubmit={handleSubmitWrapper} className="flex gap-2">
+          {isRecording && !isResponding && (
+            <VoiceWaveform ref={waveformRef} isRecording={isRecording} onTranscript={handleTranscript} />
+          )}
+
+          <form onSubmit={handleSubmit} className="flex gap-2">
             <input
               type="text"
               value={inputText}
-              onChange={onInputChange}
+              onChange={handleInputChange}
               placeholder="请输入您的问题..."
               className="flex-grow p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d5001c]"
             />
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              type="submit"
+              type="button"
+              onClick={inputText.trim() ? handleSubmit : handleVoiceButtonClick}
               className="bg-[#d5001c] text-white p-3 rounded-lg">
-              {inputText.trim() ? <Send className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+              {inputText.trim() ? (
+                <Send className="w-6 h-6" />
+              ) : (
+                <Mic className={`w-6 h-6 ${isRecording ? 'animate-pulse' : ''}`} />
+              )}
             </motion.button>
           </form>
         </>
