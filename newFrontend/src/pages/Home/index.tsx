@@ -24,6 +24,7 @@ import AssistantChat from "../../components/AssistantChat";
 import { SubmitType } from "@/types/chat";
 import Schedule from "@/components/Schedule";
 import SettingModel from "@/components/Settings";
+import RestReminder from "@/components/RestReminder";
 
 export default function CarSystemHomepage() {
   const [theme, setTheme] = useState("light");
@@ -159,6 +160,8 @@ export default function CarSystemHomepage() {
           <CarModel />
         ) : currentModule === "设置" ? (
           <SettingModel />
+        ) : currentModule === "休息提醒" ? (
+          <RestReminder />
         ) : null}
 
         {/* 右侧智能助手 */}
