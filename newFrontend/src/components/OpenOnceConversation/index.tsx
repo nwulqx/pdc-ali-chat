@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toast } from '../Toast';
 import CommandListener from '../CommandListener';
 import styles from './index.module.less';
-import { handleStreamSpeech } from '@/utils/speechUtils';
+import { handleStreamSpeech, checkVoiceCommand, playAudio } from '@/utils/speechUtils';
 
 interface Props {
   onShortCommand?: (text: string) => void;
@@ -47,14 +47,26 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
       recognition.onresult = (event: any) => {
         const current = event.resultIndex;
         const transcriptResult = event.results[current][0].transcript;
-        console.log('transcriptResult', transcriptResult);
+
         if (
-          transcriptResult.includes('小保') ||
-          transcriptResult.includes('小宝') ||
-          transcriptResult.includes('小豹')
+          event.results[current].isFinal &&
+          (transcriptResult.includes('小保') || transcriptResult.includes('小宝') || transcriptResult.includes('小豹'))
         ) {
           recognition.stop();
-          setShowCommandListener(true);
+          console.log('识别到唤醒词:', transcriptResult);
+
+          playAudio('/hi_xiaobao.wav')
+            .then(() => {
+              setShowCommandListener(true);
+            })
+            .catch((error) => {
+              console.error('音频播放失败:', error);
+              setShowCommandListener(true);
+            });
+
+          setTimeout(() => {
+            setShowCommandListener(true);
+          }, 2100);
         }
       };
 
@@ -84,7 +96,8 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
     };
   }, []);
 
-  const handleCommandComplete = async (command: string) => {
+  const handleCommandComplete = (command: string) => {
+    if (!command) return;
     console.log('收到指令:', command);
     onShortCommand?.(command);
 
@@ -93,29 +106,27 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
       recognitionRef.current.stop();
     }
 
-    // 发送 checkMessage 请求
-    fetch('http://127.0.0.1:8080/checkMessage', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: command,
-      }),
-    })
-      .then((response) => response.json())
+    // 检查语音命令
+    checkVoiceCommand(command)
       .then((result) => {
-        console.log('checkMessage 响应:', result);
+        if (result.success) {
+          console.log('语音命令检查响应:', result.data);
+        } else {
+          console.error('语音命令检查失败:', result.message);
+        }
       })
       .catch((error) => {
-        console.error('checkMessage 请求失败:', error);
+        console.error('命令检查失败:', error);
       });
-    await handleStreamSpeech(command, () => {
-      // 完成后的回调
+
+    // 处理语音合成
+    handleStreamSpeech(command, () => {
       if (showCommandListener) {
         setShowCommandListener(false);
       }
       initializeWakeWordRecognition();
+    }).catch((error) => {
+      console.error('语音合成失败:', error);
     });
   };
 

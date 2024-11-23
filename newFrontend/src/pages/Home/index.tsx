@@ -17,10 +17,11 @@ import {
 } from 'lucide-react';
 import OpenOnceConversation from '@/components/OpenOnceConversation';
 import { handleStreamSpeech } from '@/utils/speechUtils';
-
-import AssistantChat from '../../components/AssistantChat';
 import CarModel from '@/components/CarModel';
 import NavBar from '@/components/NavBar';
+
+import AssistantChat from '../../components/AssistantChat';
+import { SubmitType } from '@/types/chat';
 
 export default function CarSystemHomepage() {
   const [conversation, setConversation] = useState<string[]>([]);
@@ -29,35 +30,43 @@ export default function CarSystemHomepage() {
   const [language, setLanguage] = useState('中文');
   const [voice, setVoice] = useState('默认');
   const [isListeningMode, setIsListeningMode] = useState(false);
-  const [isNavExpanded, setIsNavExpanded] = useState(true);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (conversation.length < 5) {
-        setConversation((prev) => [...prev, '系统：有什么可以帮助您的吗？']);
-      } else {
-        clearInterval(timer);
-      }
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [conversation]);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleInputChange', e.target.value);
     setInputText(e.target.value);
   };
-  console.log('inputText', inputText);
-  const handleSubmit = async (e: React.FormEvent & { currentText?: string }) => {
+
+  const handleSubmit = async (
+    e: React.FormEvent & { currentText?: string },
+    submitType: SubmitType = SubmitType.TEXT
+  ) => {
     e.preventDefault();
+
+    // 获取要处理的文本
     const currentText = (e as any).currentText || inputText.trim();
-    console.log('currentText', currentText);
 
-    if (currentText) {
-      setConversation((prev) => [...prev, `用户：${currentText}`]);
+    if (!currentText && submitType === SubmitType.TEXT) {
+      return; // 如果是文字模式且没有输入，直接返回
+    }
 
-      await handleStreamSpeech(currentText, () => {
-        console.log('语音合成完成');
-      });
+    try {
+      // 根据不同的提交类型处理
+      if (submitType === SubmitType.TEXT) {
+        // 文字模式
+        setConversation((prev) => [...prev, `用户：${currentText}`]);
+        setInputText('');
+      } else if (submitType === SubmitType.AUDIO) {
+        // 音频模式
+        setConversation((prev) => [...prev, `用户：${currentText}`]);
+        await handleStreamSpeech(currentText, () => {
+          console.log('音频模式：语音合成完成');
+        });
+        setInputText('');
+      }
+    } catch (error) {
+      console.error('提交处理出错:', error);
+      // TODO: 可以添加错误提示
     }
   };
 
@@ -159,6 +168,8 @@ export default function CarSystemHomepage() {
           inputText={inputText}
           onInputChange={handleInputChange}
           onSubmit={handleSubmit}
+          isChatExpanded={isChatExpanded}
+          setIsChatExpanded={setIsChatExpanded}
         />
       </div>
       {isListeningMode && <OpenOnceConversation />}

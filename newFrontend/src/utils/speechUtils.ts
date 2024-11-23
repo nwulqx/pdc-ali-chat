@@ -9,6 +9,75 @@ interface SpeechResponse {
   };
 }
 
+// 定义响应类型接口
+interface ApiResponse {
+  success: boolean;
+  data?: any;
+  message?: string;
+}
+
+// 定义请求配置接口
+interface RequestConfig {
+  endpoint: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  data?: any;
+  headers?: Record<string, string>;
+}
+
+// API 基础配置
+const API_BASE_URL = 'http://127.0.0.1:8080';
+
+/**
+ * 通用 API 请求函数
+ * @param config 请求配置
+ * @returns Promise<ApiResponse>
+ */
+export const makeApiRequest = async (config: RequestConfig): Promise<ApiResponse> => {
+  try {
+    const { endpoint, method = 'POST', data, headers = {} } = config;
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    console.error(`API request failed: ${error}`);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : '请求失败',
+    };
+  }
+};
+
+/**
+ * 检查语音命令
+ * @param command 语音命令文本
+ * @returns Promise<ApiResponse>
+ */
+export const checkVoiceCommand = async (command: string): Promise<ApiResponse> => {
+  return makeApiRequest({
+    endpoint: '/checkMessage',
+    method: 'POST',
+    data: {
+      message: command,
+    },
+  });
+};
+
 /**
  * 处理语音合成和播放的流式响应
  * @param requestData 请求数据
@@ -134,4 +203,25 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
     // 执行完成回调
     onComplete?.();
   }
+};
+
+/**
+ * 播放音频文件
+ * @param audioPath 音频文件路径
+ * @returns Promise，音频播放完成后 resolve
+ */
+export const playAudio = (audioPath: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(audioPath);
+
+    audio.onended = () => {
+      resolve();
+    };
+
+    audio.onerror = (error) => {
+      reject(error);
+    };
+
+    audio.play().catch(reject);
+  });
 };
