@@ -20,6 +20,7 @@ import { handleStreamSpeech } from '@/utils/speechUtils';
 
 import AssistantChat from '../../components/AssistantChat';
 import CarModel from '@/components/CarModel';
+import NavBar from '@/components/NavBar';
 
 export default function CarSystemHomepage() {
   const [conversation, setConversation] = useState<string[]>([]);
@@ -147,52 +148,7 @@ export default function CarSystemHomepage() {
       {/* 主要内容区域 */}
       <div className="flex gap-8 flex-grow">
         {/* 左侧应用按钮 */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{
-            opacity: 1,
-            x: 0,
-            width: isNavExpanded ? '25%' : '80px', // 控制宽度
-          }}
-          transition={{ duration: 0.3 }}
-          className="bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-3xl p-6 shadow-lg flex flex-col gap-4">
-          {/* 展开/收起按钮 */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsNavExpanded(!isNavExpanded)}
-            className={`${isNavExpanded ? 'self-end' : 'self-center'} mb-2`}>
-            <ChevronLeft className={`w-6 h-6 transform transition-transform ${isNavExpanded ? '' : 'rotate-180'}`} />
-          </motion.button>
-
-          {[
-            { icon: <Navigation className="w-8 h-8" />, label: '导航' },
-            { icon: <Car className="w-8 h-8" />, label: '车辆信息' },
-            { icon: <Calendar className="w-8 h-8" />, label: '日程' },
-            { icon: <Settings className="w-8 h-8" />, label: '设置' },
-            { icon: <Coffee className="w-8 h-8" />, label: '休息提醒' },
-          ].map((app, index) => (
-            <motion.button
-              key={index}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-2xl p-4 shadow-lg flex items-center ${
-                isNavExpanded ? 'justify-start' : 'justify-center'
-              } overflow-hidden`}>
-              <div className={`text-[#d5001c] ${isNavExpanded ? 'min-w-[32px]' : ''}`}>{app.icon}</div>
-              <motion.span
-                className="text-sm font-medium whitespace-nowrap"
-                animate={{
-                  opacity: isNavExpanded ? 1 : 0,
-                  width: isNavExpanded ? 'auto' : 0,
-                  marginLeft: isNavExpanded ? '1rem' : 0,
-                }}
-                transition={{ duration: 0.2 }}>
-                {app.label}
-              </motion.span>
-            </motion.button>
-          ))}
-        </motion.div>
+        <NavBar isNavExpanded={isNavExpanded} setIsNavExpanded={setIsNavExpanded} />
 
         {/* 中央车辆信息 */}
         <CarModel />
