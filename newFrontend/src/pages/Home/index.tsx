@@ -33,6 +33,13 @@ export default function CarSystemHomepage() {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
 
+  const handleResetListeningMode = () => {
+    setIsListeningMode(false);
+    setTimeout(() => {
+      setIsListeningMode(true);
+    }, 100);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
   };
@@ -172,7 +179,7 @@ export default function CarSystemHomepage() {
           setIsChatExpanded={setIsChatExpanded}
         />
       </div>
-      {isListeningMode && <OpenOnceConversation />}
+      {isListeningMode && <OpenOnceConversation handleResetListeningMode={handleResetListeningMode} />}
     </div>
   );
 }

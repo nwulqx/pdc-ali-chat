@@ -129,7 +129,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
       });
     };
 
-    // 处理音频队列的函数
+    // 修改处理音频队列的函数
     const processAudioQueue = async () => {
       if (isPlaying || audioQueue.length === 0) return;
 
@@ -145,7 +145,17 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
         }
       }
       isPlaying = false;
+
+      // 在这里检查是否所有音频都播放完毕且流已结束
+      if (audioQueue.length === 0 && streamEnded) {
+        console.log('语音合成完成2');
+        onComplete?.();
+      }
     };
+
+    // 添加一个标志来追踪流是否结束
+    let streamEnded = false;
+
     const response = await fetch('http://127.0.0.1:8080/v1/stream-speech', {
       method: 'POST',
       headers: {
@@ -185,8 +195,13 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        // 流结束时重置解析器
         parser.reset();
+        streamEnded = true;
+        // 如果队列为空且没有正在播放，直接调用回调
+        if (audioQueue.length === 0 && !isPlaying) {
+          console.log('语音合成完成1');
+          onComplete?.();
+        }
         break;
       }
 
@@ -199,8 +214,6 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
       type: 'error',
       message: '语音合成失败',
     });
-  } finally {
-    // 执行完成回调
     onComplete?.();
   }
 };

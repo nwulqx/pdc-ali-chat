@@ -7,6 +7,7 @@ import { handleStreamSpeech, checkVoiceCommand, playAudio } from '@/utils/speech
 
 interface Props {
   onShortCommand?: (text: string) => void;
+  handleResetListeningMode?: () => void;
 }
 
 export interface StreamSpeechRequest {
@@ -15,7 +16,7 @@ export interface StreamSpeechRequest {
   VoiceName?: string;
 }
 
-const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
+const OpenOnceConversation: React.FC<Props> = ({ onShortCommand, handleResetListeningMode }) => {
   const [isListening, setIsListening] = useState(false);
   const [showCommandListener, setShowCommandListener] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -125,6 +126,8 @@ const OpenOnceConversation: React.FC<Props> = ({ onShortCommand }) => {
         setShowCommandListener(false);
       }
       initializeWakeWordRecognition();
+      // 在语音合成完成后重置监听模式
+      handleResetListeningMode?.();
     }).catch((error) => {
       console.error('语音合成失败:', error);
     });
