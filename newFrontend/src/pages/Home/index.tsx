@@ -23,6 +23,7 @@ import NavBar from "@/components/NavBar";
 import AssistantChat from "../../components/AssistantChat";
 import { SubmitType } from "@/types/chat";
 import Schedule from "@/components/Schedule";
+import SettingModel from "@/components/Settings";
 
 export default function CarSystemHomepage() {
   const [theme, setTheme] = useState("light");
@@ -156,6 +157,8 @@ export default function CarSystemHomepage() {
           <Schedule />
         ) : currentModule === "车辆信息" ? (
           <CarModel />
+        ) : currentModule === "设置" ? (
+          <SettingModel />
         ) : null}
 
         {/* 右侧智能助手 */}
