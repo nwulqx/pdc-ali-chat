@@ -29,6 +29,7 @@ export default function CarSystemHomepage() {
   const [voice, setVoice] = useState('默认');
   const [isListeningMode, setIsListeningMode] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const [currentModule, setCurrentModule] = useState('车辆信息');
 
   const handleResetListeningMode = () => {
     setIsListeningMode(false);
@@ -124,7 +125,12 @@ export default function CarSystemHomepage() {
       {/* 主要内容区域 */}
       <div className="flex gap-8 flex-grow">
         {/* 左侧应用按钮 */}
-        <NavBar isNavExpanded={isNavExpanded} setIsNavExpanded={setIsNavExpanded} />
+        <NavBar
+          isNavExpanded={isNavExpanded}
+          setIsNavExpanded={setIsNavExpanded}
+          currentModule={currentModule}
+          onModuleChange={setCurrentModule}
+        />
 
         {/* 中央车辆信息 */}
         <CarModel />

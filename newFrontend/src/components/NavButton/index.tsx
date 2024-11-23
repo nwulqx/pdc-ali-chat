@@ -6,27 +6,21 @@ interface NavButtonProps {
   icon: React.ReactNode;
   label: string;
   isNavExpanded: boolean;
+  isActive: boolean;
+  onClick: () => void;
 }
 
-export default function NavButton({ icon, label, isNavExpanded }: NavButtonProps) {
+export default function NavButton({ icon, label, isNavExpanded, isActive, onClick }: NavButtonProps) {
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className={`bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-2xl p-4 shadow-lg flex items-center ${
-        isNavExpanded ? 'justify-start' : 'justify-center'
-      } overflow-hidden`}>
-      <div className={`text-[#d5001c] ${isNavExpanded ? 'min-w-[32px]' : ''}`}>{icon}</div>
-      <motion.span
-        className="text-sm font-medium whitespace-nowrap"
-        animate={{
-          opacity: isNavExpanded ? 1 : 0,
-          width: isNavExpanded ? 'auto' : 0,
-          marginLeft: isNavExpanded ? '1rem' : 0,
-        }}
-        transition={{ duration: 0.2 }}>
-        {label}
-      </motion.span>
+      onClick={onClick}
+      className={`flex items-center gap-4 p-3 rounded-xl transition-all ${
+        isNavExpanded ? 'w-full justify-start' : 'w-[72px] justify-center'
+      } ${isActive ? 'bg-[#d5001c] text-white' : 'hover:bg-white/30'}`}>
+      {icon}
+      {isNavExpanded && <span className={isActive ? 'text-white' : 'text-gray-700'}>{label}</span>}
     </motion.button>
   );
 }

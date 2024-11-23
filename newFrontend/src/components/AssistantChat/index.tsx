@@ -91,7 +91,7 @@ export default function AssistantChat() {
         <ChevronRight className={`w-6 h-6 transform transition-transform ${isChatExpanded ? '' : 'rotate-180'}`} />
       </motion.button>
 
-      {isChatExpanded && (
+      {isChatExpanded ? (
         <>
           <div className="flex-grow overflow-y-auto mb-4 space-y-4">
             {conversation.map((message, index) => (
@@ -131,6 +131,15 @@ export default function AssistantChat() {
             </motion.button>
           </form>
         </>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          type="button"
+          onClick={handleVoiceButtonClick}
+          className="bg-[#d5001c] text-white p-3 rounded-lg self-center mt-auto">
+          <Mic className={`w-6 h-6 ${isRecording ? 'animate-pulse' : ''}`} />
+        </motion.button>
       )}
     </motion.div>
   );
