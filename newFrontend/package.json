@@ -43,8 +43,10 @@
     "framer-motion": "^11.11.17",
     "js-cookie": "^3.0.1",
     "lamina": "1.1.23",
+    "leva": "0.9.34",
     "lodash": "^4.17.21",
     "lucide-react": "^0.460.0",
+    "r3f-perf": "7.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-joyride": "^2.7.4",
@@ -56,9 +58,7 @@
     "three": "0.149.0",
     "user-agent": "^1.0.4",
     "vite-plugin-svgr": "^4.2.0",
-    "wavesurfer.js": "^7.7.15",
-    "r3f-perf": "7.2.1",
-    "leva": "0.9.34"
+    "wavesurfer.js": "^7.8.9"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",

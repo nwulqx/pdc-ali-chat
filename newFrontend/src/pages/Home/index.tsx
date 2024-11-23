@@ -16,6 +16,7 @@ import {
   MicOff,
 } from 'lucide-react';
 import OpenOnceConversation from '@/components/OpenOnceConversation';
+import { handleStreamSpeech } from '@/utils/speechUtils';
 
 import AssistantChat from '../../components/AssistantChat';
 import CarModel from '@/components/CarModel';
@@ -41,14 +42,21 @@ export default function CarSystemHomepage() {
   }, [conversation]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleInputChange', e.target.value);
     setInputText(e.target.value);
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  console.log('inputText', inputText);
+  const handleSubmit = async (e: React.FormEvent & { currentText?: string }) => {
     e.preventDefault();
-    if (inputText.trim()) {
-      setConversation((prev) => [...prev, `用户：${inputText}`]);
-      setInputText('');
+    const currentText = (e as any).currentText || inputText.trim();
+    console.log('currentText', currentText);
+
+    if (currentText) {
+      setConversation((prev) => [...prev, `用户：${currentText}`]);
+
+      await handleStreamSpeech(currentText, () => {
+        console.log('语音合成完成');
+      });
     }
   };
 
