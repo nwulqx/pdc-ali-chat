@@ -65,7 +65,13 @@ export default function CarSystemHomepage() {
             setCurrentModule("日程");
           }
           break;
-        // 其他类型的处理...
+        case "music":
+          if (command.operation === "open") {
+            setIsMusicModalOpen(true);
+          } else if (command.operation === "close") {
+            setIsMusicModalOpen(false);
+          }
+          break;
       }
     }
   };
@@ -109,6 +115,7 @@ export default function CarSystemHomepage() {
             isVisible={isMusicModalOpen}
             onClose={() => setIsMusicModalOpen(false)}
             buttonRef={musicButtonRef}
+            autoPlay={true}
           />
           <motion.button
             whileHover={{ scale: 1.1 }}

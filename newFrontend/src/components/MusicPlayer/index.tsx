@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
@@ -26,12 +26,14 @@ interface MusicPlayerProps {
   isVisible: boolean;
   onClose: () => void;
   buttonRef: React.RefObject<HTMLDivElement>;
+  autoPlay?: boolean;
 }
 
 export default function MusicPlayer({
   isVisible,
   onClose,
   buttonRef,
+  autoPlay = false,
 }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -40,6 +42,13 @@ export default function MusicPlayer({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const currentSong = mockSongs[currentSongIndex];
+
+  useEffect(() => {
+    if (isVisible && autoPlay && !isPlaying) {
+      setIsPlaying(true);
+      audioRef.current?.play();
+    }
+  }, [isVisible, autoPlay]);
 
   const togglePlay = () => {
     if (audioRef.current) {
