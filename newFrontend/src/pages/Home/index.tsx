@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  Navigation,
   User,
   Sun,
   Moon,
@@ -25,6 +24,7 @@ import { SubmitType } from "@/types/chat";
 import Schedule from "@/components/Schedule";
 import SettingModel from "@/components/Settings";
 import RestReminder from "@/components/RestReminder";
+import Navigation from "@/components/Navigation";
 
 export default function CarSystemHomepage() {
   const [theme, setTheme] = useState("light");
@@ -162,6 +162,8 @@ export default function CarSystemHomepage() {
           <SettingModel />
         ) : currentModule === "休息提醒" ? (
           <RestReminder />
+        ) : currentModule === "导航" ? (
+          <Navigation />
         ) : null}
 
         {/* 右侧智能助手 */}
