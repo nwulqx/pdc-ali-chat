@@ -1,30 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import {
-  User,
-  Sun,
-  Moon,
-  Globe,
-  Music,
-  Car,
-  Calendar,
-  Settings,
-  Coffee,
-  ChevronLeft,
-  Mic,
-  MicOff,
-} from "lucide-react";
+import { Sun, Moon, Globe, Music, Mic, MicOff, Music2 } from "lucide-react";
 import OpenOnceConversation from "@/components/OpenOnceConversation";
 import { handleStreamSpeech } from "@/utils/speechUtils";
 import CarModel from "@/components/CarModel";
 import NavBar from "@/components/NavBar";
 
 import AssistantChat from "../../components/AssistantChat";
-import { SubmitType } from "@/types/chat";
 import Schedule from "@/components/Schedule";
 import SettingModel from "@/components/Settings";
 import RestReminder from "@/components/RestReminder";
 import Navigation from "@/components/Navigation";
+import MusicPlayer from "@/components/MusicPlayer";
 
 export default function CarSystemHomepage() {
   const [theme, setTheme] = useState("light");
@@ -33,6 +20,8 @@ export default function CarSystemHomepage() {
   const [isListeningMode, setIsListeningMode] = useState(false);
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [currentModule, setCurrentModule] = useState("车辆信息");
+  const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
+  const musicButtonRef = useRef<HTMLDivElement>(null);
 
   const handleResetListeningMode = () => {
     setIsListeningMode(false);
@@ -92,6 +81,11 @@ export default function CarSystemHomepage() {
           <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-[#1a1a1a] to-[#4a4a4a] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
         </motion.h1>
         <div className="flex items-center space-x-4">
+          <MusicPlayer
+            isVisible={isMusicModalOpen}
+            onClose={() => setIsMusicModalOpen(false)}
+            buttonRef={musicButtonRef}
+          />
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -126,20 +120,16 @@ export default function CarSystemHomepage() {
           >
             <Globe className="w-6 h-6" />
           </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={toggleVoice}
-            className="bg-[#d5001c] text-white p-2 rounded-full"
-          >
-            <Music className="w-6 h-6" />
-          </motion.button>
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            className="bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-full p-2 shadow-lg"
-          >
-            <User className="w-6 h-6 text-[#d5001c]" />
-          </motion.div>
+          <div className="flex items-center">
+            <motion.div
+              ref={musicButtonRef}
+              whileHover={{ scale: 1.1 }}
+              className="bg-white bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-full p-2 shadow-lg cursor-pointer"
+              onClick={() => setIsMusicModalOpen(!isMusicModalOpen)}
+            >
+              <Music2 className="w-6 h-6 text-[#d5001c]" />
+            </motion.div>
+          </div>
         </div>
       </div>
 
