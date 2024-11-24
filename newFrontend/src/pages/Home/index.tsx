@@ -46,6 +46,30 @@ export default function CarSystemHomepage() {
     setIsListeningMode(!isListeningMode);
   };
 
+  const handleVoiceCommand = (command: {
+    success: boolean;
+    type?: string;
+    operation?: string;
+    desc: string;
+  }) => {
+    console.log("command", command);
+    if (command.success) {
+      switch (command.type) {
+        case "navigation":
+          if (command.operation === "open") {
+            setCurrentModule("导航");
+          }
+          break;
+        case "schedule":
+          if (command.operation === "open") {
+            setCurrentModule("日程");
+          }
+          break;
+        // 其他类型的处理...
+      }
+    }
+  };
+
   return (
     <div
       className={`min-h-screen bg-[#f2f2f2] text-[#000000] p-8 flex flex-col ${
@@ -162,6 +186,7 @@ export default function CarSystemHomepage() {
       {isListeningMode && (
         <OpenOnceConversation
           handleResetListeningMode={handleResetListeningMode}
+          onShortCommand={handleVoiceCommand}
         />
       )}
     </div>

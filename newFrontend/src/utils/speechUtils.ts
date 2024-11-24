@@ -1,6 +1,6 @@
-import { createParser, type EventSourceMessage } from 'eventsource-parser';
-import { Toast } from '@/components/Toast';
-import { StreamSpeechRequest } from '@/components/OpenOnceConversation';
+import { createParser, type EventSourceMessage } from "eventsource-parser";
+import { Toast } from "@/components/Toast";
+import { StreamSpeechRequest } from "@/components/OpenOnceConversation";
 
 interface SpeechResponse {
   success: boolean;
@@ -19,27 +19,29 @@ interface ApiResponse {
 // 定义请求配置接口
 interface RequestConfig {
   endpoint: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   data?: any;
   headers?: Record<string, string>;
 }
 
 // API 基础配置
-const API_BASE_URL = 'http://127.0.0.1:8080';
+const API_BASE_URL = "https://ai.forsize.cn";
 
 /**
  * 通用 API 请求函数
  * @param config 请求配置
  * @returns Promise<ApiResponse>
  */
-export const makeApiRequest = async (config: RequestConfig): Promise<ApiResponse> => {
+export const makeApiRequest = async (
+  config: RequestConfig
+): Promise<ApiResponse> => {
   try {
-    const { endpoint, method = 'POST', data, headers = {} } = config;
+    const { endpoint, method = "POST", data, headers = {} } = config;
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -58,7 +60,7 @@ export const makeApiRequest = async (config: RequestConfig): Promise<ApiResponse
     console.error(`API request failed: ${error}`);
     return {
       success: false,
-      message: error instanceof Error ? error.message : '请求失败',
+      message: error instanceof Error ? error.message : "请求失败",
     };
   }
 };
@@ -68,10 +70,12 @@ export const makeApiRequest = async (config: RequestConfig): Promise<ApiResponse
  * @param command 语音命令文本
  * @returns Promise<ApiResponse>
  */
-export const checkVoiceCommand = async (command: string): Promise<ApiResponse> => {
+export const checkVoiceCommand = async (
+  command: string
+): Promise<ApiResponse> => {
   return makeApiRequest({
-    endpoint: '/checkMessage',
-    method: 'POST',
+    endpoint: "/checkMessage",
+    method: "POST",
     data: {
       message: command,
     },
@@ -86,12 +90,15 @@ export const checkVoiceCommand = async (command: string): Promise<ApiResponse> =
  * @param onComplete 完成后的回调函数
  */
 
-export const handleStreamSpeech = async (command: string, onComplete?: () => void): Promise<void> => {
+export const handleStreamSpeech = async (
+  command: string,
+  onComplete?: () => void
+): Promise<void> => {
   try {
     const requestData: StreamSpeechRequest = {
       prompt: command,
-      audioSource: 'alicloud',
-      VoiceName: 'longxiaoxia',
+      audioSource: "alicloud",
+      VoiceName: "longxiaoxia",
     };
 
     // 创建音频队列和播放状态
@@ -108,7 +115,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
             arrayBuffer[i] = audioData.charCodeAt(i);
           }
 
-          const audioBlob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+          const audioBlob = new Blob([arrayBuffer], { type: "audio/mpeg" });
           const audioUrl = URL.createObjectURL(audioBlob);
           const audio = new Audio(audioUrl);
 
@@ -140,7 +147,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
           try {
             await playAudio(content);
           } catch (error) {
-            console.error('音频播放失败:', error);
+            console.error("音频播放失败:", error);
           }
         }
       }
@@ -148,7 +155,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
 
       // 在这里检查是否所有音频都播放完毕且流已结束
       if (audioQueue.length === 0 && streamEnded) {
-        console.log('语音合成完成2');
+        console.log("语音合成完成2");
         onComplete?.();
       }
     };
@@ -157,9 +164,9 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
     let streamEnded = false;
 
     const response = await fetch(`${API_BASE_URL}/v1/stream-speech`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(requestData),
     });
@@ -168,13 +175,13 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
     const decoder = new TextDecoder();
 
     if (!reader) {
-      throw new Error('无法创建流读取器');
+      throw new Error("无法创建流读取器");
     }
 
     // 创建 SSE 解析器
     const parser = createParser({
       onError(err) {
-        console.error('SSE 解析错误:', err);
+        console.error("SSE 解析错误:", err);
       },
       onEvent(event: EventSourceMessage) {
         try {
@@ -186,7 +193,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
             processAudioQueue();
           }
         } catch (e) {
-          console.error('解析音频数据失败:', e);
+          console.error("解析音频数据失败:", e);
         }
       },
     });
@@ -199,7 +206,7 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
         streamEnded = true;
         // 如果队列为空且没有正在播放，直接调用回调
         if (audioQueue.length === 0 && !isPlaying) {
-          console.log('语音合成完成1');
+          console.log("语音合成完成1");
           onComplete?.();
         }
         break;
@@ -209,10 +216,10 @@ export const handleStreamSpeech = async (command: string, onComplete?: () => voi
       parser.feed(chunk);
     }
   } catch (error) {
-    console.error('语音合成请求失败:', error);
+    console.error("语音合成请求失败:", error);
     Toast.show({
-      type: 'error',
-      message: '语音合成失败',
+      type: "error",
+      message: "语音合成失败",
     });
     onComplete?.();
   }
