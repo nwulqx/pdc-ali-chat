@@ -22,6 +22,7 @@ import com.aliyun.bailian.chatgpt.service.PosAutoLogService;
 import com.aliyun.bailian.chatgpt.service.impl.FlowingSpeechSynthesizerService;
 import com.aliyun.bailian.chatgpt.service.impl.SpeechSynthesisService;
 import io.reactivex.Flowable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -169,6 +170,8 @@ public class LLmDashClient {
 
     ApplicationParam param = buildApplicationParam(prompt, sessionId);
 
+    StringBuilder saveText = new StringBuilder();
+
     // 启动文本处理线程
     textProcessorExecutor.submit(() -> {
       try {
@@ -193,6 +196,7 @@ public class LLmDashClient {
           }
           if (!text.isEmpty()) {
             textBuffer.append(text);
+            saveText.append(text);
             int lastIndex = 0;
             Matcher matcher = SENTENCE_END_PATTERN.matcher(textBuffer);
 
@@ -221,9 +225,18 @@ public class LLmDashClient {
         isCompleted.set(true);
         emitter.completeWithError(e);
       }
+      saveLog(sessionId, prompt, saveText.toString());
     });
-
     return emitter;
+  }
+
+  private void saveLog(String sessionId, String prompt, String string) {
+    PosAutoLog log = new PosAutoLog();
+    log.setUserId(sessionId);
+    log.setQuestion(prompt);
+    log.setAnswer(string);
+    log.setCreateTime(LocalDateTime.now());
+    posAutoLogService.savePosAutoLog(log);
   }
 
   private void processSentenceForSpeech(String sentence, String sessionId, SseEmitter emitter, String VoiceName) {
