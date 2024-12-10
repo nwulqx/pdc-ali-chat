@@ -15,12 +15,11 @@ import com.aliyun.broadscope.bailian.sdk.ApplicationClient;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsRequest;
 import com.aliyun.broadscope.bailian.sdk.models.CompletionsResponse;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -45,7 +44,7 @@ public class LlmDashSseController {
   List<String> list = List.of("1.开关窗户", "2.开关音乐", "3.开关电视机");
 
   @ResponseBody
-  @PostMapping(value = "/checkMessage")
+  @PostMapping(value = "/checkMessage", produces = MediaType.APPLICATION_JSON_VALUE)
   public R<Object> checkMessage(@RequestBody MessageDto message) throws IOException {
     String msg = stringRedisService.getKey(Constants.YX_PROMPT);
     // if (StringUtils.isBlank(msg)) {
