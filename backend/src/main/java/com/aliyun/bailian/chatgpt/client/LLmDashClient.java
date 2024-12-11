@@ -430,6 +430,10 @@ public class LLmDashClient {
     System.out.println("pollResults finished for sessionId: " + sessionId);
   }
 
+  public void savePosAutoLog(PosAutoLog log) {
+    posAutoLogService.savePosAutoLog(log);
+  }
+
   private static class SpeechTask {
 
     @Getter

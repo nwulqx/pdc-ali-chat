@@ -8,7 +8,6 @@ import com.aliyun.bailian.chatgpt.constants.Constants;
 import com.aliyun.bailian.chatgpt.dto.DashLlmRequestDTO;
 import com.aliyun.bailian.chatgpt.dto.MessageDto;
 import com.aliyun.bailian.chatgpt.model.PosAutoLog;
-import com.aliyun.bailian.chatgpt.service.PosAutoLogService;
 import com.aliyun.bailian.chatgpt.service.StringRedisService;
 import com.aliyun.bailian.chatgpt.utils.R;
 import com.aliyun.broadscope.bailian.sdk.ApplicationClient;
@@ -32,11 +31,8 @@ public class LlmDashSseController {
   @Autowired
   private StringRedisService stringRedisService;
 
-  @javax.annotation.Resource
-  private LlmConfig llmConfig;
-
   @Autowired
-  private PosAutoLogService posAutoLogService;
+  private LlmConfig llmConfig;
 
   @Autowired
   private ApplicationClient applicationClient;
@@ -69,7 +65,7 @@ public class LlmDashSseController {
     log.setQuestion(message.getMessage());
     log.setAnswer(jsonObject.toJSONString());
     log.setCreateTime(LocalDateTime.now());
-    posAutoLogService.savePosAutoLog(log);
+    llmDashClient.savePosAutoLog(log);
     return R.success(jsonObject);
   }
 
